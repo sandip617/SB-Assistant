@@ -1,0 +1,96 @@
+/* Black Hole look: dark navy and gold. Removing class "hole" from <body> brings back the old Ice Glass design. */
+body.hole[data-t="c"]{
+  color-scheme:dark;
+  --bg:#03050b;--bg2:radial-gradient(ellipse 80% 70% at 50% 45%,#0c1324 0,transparent 72%);
+  --fg:#f8f2e4;--muted:#c2b9a5;--acc:#f0c86e;--hi:#fff2c9;--alert:#ff938c;
+  --panel:rgba(9,13,24,.76);--bd:rgba(240,200,110,.22);--bd-hi:rgba(255,218,130,.8);--blur:0px;
+  --glow:0 12px 30px rgba(0,0,0,.5);--me:rgba(240,200,110,.16);--ai:rgba(240,200,110,.07);
+  --font:"Kohinoor Bangla","Bangla Sangam MN","Noto Sans Bengali","Helvetica Neue",sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);
+}
+body.hole ::selection{background:var(--acc);color:#17110a}
+body.hole *{scrollbar-width:thin;scrollbar-color:rgba(240,200,110,.42) transparent}
+body.hole :focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+
+#holeGl{display:none}
+body.hole-gl #holeGl{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:0}
+body.hole-gl #cv{visibility:hidden}
+body.hole .sub{display:none!important}
+body.hole .bar,body.hole .hud{position:relative;z-index:2}
+body.hole::after{content:"";position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.14;background:repeating-linear-gradient(180deg,transparent 0 2px,rgba(255,225,150,.08) 2px 3px)}
+body.hole .stage{pointer-events:none}
+body.hole .stage button{pointer-events:auto}
+
+/* gold corner brackets are backgrounds, so they stay put while a panel scrolls */
+body.hole .panel{--c:13px;border-radius:0!important;background:
+  linear-gradient(var(--acc),var(--acc)) 0 0/var(--c) 2px,linear-gradient(var(--acc),var(--acc)) 0 0/2px var(--c),
+  linear-gradient(var(--acc),var(--acc)) 100% 0/var(--c) 2px,linear-gradient(var(--acc),var(--acc)) 100% 0/2px var(--c),
+  linear-gradient(var(--acc),var(--acc)) 0 100%/var(--c) 2px,linear-gradient(var(--acc),var(--acc)) 0 100%/2px var(--c),
+  linear-gradient(var(--acc),var(--acc)) 100% 100%/var(--c) 2px,linear-gradient(var(--acc),var(--acc)) 100% 100%/2px var(--c),
+  var(--panel);background-repeat:no-repeat;backdrop-filter:none;-webkit-backdrop-filter:none;
+  transition:transform .45s var(--ease),border-color .3s,background-size .4s var(--ease);animation:holePanel .85s var(--ease) both}
+body.hole .panel:hover{border-color:var(--bd-hi)}
+body.hole .left>.panel:nth-child(2),body.hole .right>.panel:nth-child(1){animation-delay:.08s}
+body.hole .left>.panel:nth-child(n+3),body.hole .right>.panel:nth-child(2){animation-delay:.16s}
+body.booting .panel{animation-delay:1.55s!important}
+@keyframes holePanel{from{opacity:0;transform:translateY(16px) scale(.975)}to{opacity:1;transform:none}}
+body.hole h3{font-size:14px;letter-spacing:0;text-transform:none;color:var(--acc)}
+body.hole #time{color:var(--hi);display:flex;justify-content:center}
+body.hole #cd{color:var(--acc);display:flex;justify-content:center}
+body.hole .dg{display:inline-block;white-space:pre}
+body.hole .dg.tick{animation:holeTick .42s var(--ease)}
+@keyframes holeTick{from{transform:translateY(-42%);opacity:.15;filter:blur(1.5px)}to{transform:none;opacity:1;filter:none}}
+
+body.hole .bar button,body.hole .chatTop button,body.hole .task button,body.hole .studyTop button,body.hole .card button,body.hole form button{position:relative;border-radius:0;background:rgba(9,13,24,.84);color:var(--fg);border:1px solid var(--bd);transition:transform .3s var(--spring),border-color .2s,color .2s,background .25s}
+body.hole .bar button:hover,body.hole .chatTop button:hover,body.hole .task button:hover,body.hole .studyTop button:hover,body.hole .card button:hover,body.hole form button:hover{border-color:var(--bd-hi);color:var(--hi);transform:translateY(-2px)}
+body.hole .bar button:active,body.hole .chatTop button:active,body.hole .task button:active,body.hole .studyTop button:active,body.hole .card button:active,body.hole form button:active{transform:scale(.95)}
+body.hole .bar button.on,body.hole .chatTop button[aria-expanded="true"],body.hole .card button:not(.g),body.hole form button:last-child,body.hole #attachBtn{background:linear-gradient(135deg,#b98a34,#f8df98 55%,#c99a3f);border-color:var(--hi);color:#17110a;font-weight:600}
+body.hole form button:last-child:hover,body.hole .card button:not(.g):hover,body.hole .bar button.on:hover,body.hole #attachBtn:hover{color:#17110a}
+body.hole input:not([type=checkbox]):not([type=range]):not([type=file]),body.hole textarea,body.hole select{border-radius:0;color:var(--fg);background:rgba(3,5,11,.85);border:1px solid var(--bd)}
+body.hole input::placeholder,body.hole textarea::placeholder{color:var(--muted)}
+body.hole input:focus,body.hole textarea:focus{border-color:var(--bd-hi)}
+body.hole input[type=checkbox],body.hole input[type=range]{accent-color:var(--acc)}
+body.hole .m{border-radius:0;animation:holeMsg .45s var(--ease) both}
+@keyframes holeMsg{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+body.hole .task,body.hole .mailrow{transition:transform .3s var(--ease),color .2s}
+body.hole .mailrow:hover{transform:translateX(5px);color:var(--hi)}
+body.hole .task i{box-shadow:none}
+body.hole .task.late i{background:var(--alert)}
+body.hole .task.late small,body.hole .lateHead,body.hole .lateHead small,body.hole .studyNote{color:var(--alert)}
+body.hole .chips span{border-radius:0;background:rgba(9,13,24,.82);backdrop-filter:none}
+body.hole #micchip.live,body.hole #brainchip.off{background:#b3261e;border-color:#ff938c;color:#fff}
+body.hole #focusBar{border-radius:0;background:linear-gradient(135deg,#b98a34,#f8df98 55%,#c99a3f);color:#17110a}
+body.hole #focusBar button{color:#17110a;border-color:#17110a;background:transparent}
+body.hole .label b{color:var(--hi);text-shadow:0 2px 12px rgba(0,0,0,.9)}
+body.hole #status{color:var(--fg);text-shadow:0 2px 10px rgba(0,0,0,.9)}
+#holeBars{display:none}
+body.hole-gl #holeBars{display:flex;align-items:center;justify-content:center;gap:3px;height:24px;margin-bottom:4px}
+#holeBars i{display:block;width:3px;height:100%;background:linear-gradient(180deg,var(--hi),#b5842f);transform:scaleY(.08);will-change:transform}
+
+body.hole #setDlg,body.hole #planDlg,body.hole #fbDlg,body.hole #chatsPanel{color:var(--fg);background:#0a101d;border:1px solid var(--bd-hi);border-radius:0;box-shadow:0 24px 60px rgba(0,0,0,.7)}
+body.hole #setDlg::backdrop,body.hole #planDlg::backdrop,body.hole #fbDlg::backdrop{background:rgba(1,3,8,.72)}
+body.hole #setDlg h3,body.hole #setDlg h2,body.hole #planDlg h3,body.hole #planDlg h2,body.hole #fbDlg h2{color:var(--acc)}
+body.hole #planDlg input:not([type=checkbox]),body.hole #fbCaption{color:var(--fg);background:rgba(3,5,11,.85);border:1px solid var(--bd);border-radius:0}
+body.hole dialog button,body.hole #fbClose{border-radius:0!important;color:var(--acc)!important;background:transparent!important;border:1px solid var(--bd-hi)!important}
+body.hole #setDlg #setClose,body.hole #planDlg .main,body.hole .fbMain{background:linear-gradient(135deg,#b98a34,#f8df98 55%,#c99a3f)!important;color:#17110a!important;border-color:var(--hi)!important}
+body.hole dialog small,body.hole .fbNote,body.hole .fbPost small,body.hole .planHead small,body.hole .chatrow small{color:var(--muted)}
+body.hole #fbDlg section,body.hole .fbPost,body.hole #setDlg .rt,body.hole .planDay,body.hole .chatrow{border-color:rgba(240,200,110,.16)}
+body.hole #fbDrop{background:rgba(3,5,11,.7);border-color:var(--bd-hi);border-radius:0}
+body.hole #fbDrop.over{background:rgba(240,200,110,.12)}
+body.hole #fbDlg h3{color:var(--acc)}
+body.hole .chatrow.on{background:rgba(240,200,110,.12)}
+body.hole .chatrow button{border:0!important;background:none!important}
+body.hole #chatsDel{border-radius:0;background:#b3261e}
+@media (max-width:980px){body.hole .card{background:#0a101d}}
+
+#holeBoot{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#03050b;pointer-events:none;animation:holeBootOut .6s var(--ease,ease) 1.5s forwards}
+#holeBoot svg{position:absolute;width:min(62vh,62vw);height:min(62vh,62vw);transform:rotate(-90deg)}
+#holeBoot circle{fill:none;stroke:#f0c86e;stroke-width:.35;stroke-dasharray:302;stroke-dashoffset:302;animation:holeDraw 1.2s cubic-bezier(.16,1,.3,1) forwards}
+#holeBoot circle+circle{stroke-width:.18;animation-delay:.14s}
+#holeBoot p{position:relative;font-family:"SF Mono",Menlo,monospace;font-size:clamp(26px,5vw,48px);letter-spacing:.2em;color:#fff2c9;clip-path:inset(0 100% 0 0);animation:holeText .8s cubic-bezier(.16,1,.3,1) .32s forwards}
+@keyframes holeDraw{to{stroke-dashoffset:0}}
+@keyframes holeText{to{clip-path:inset(0 0 0 0);letter-spacing:.08em}}
+@keyframes holeBootOut{to{opacity:0;visibility:hidden;transform:scale(1.12)}}
+@media (prefers-reduced-motion:reduce){
+  body.hole *,body.hole *::before,body.hole *::after,#holeBoot,#holeBoot *{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}
+}

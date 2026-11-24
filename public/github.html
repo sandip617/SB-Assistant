@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SB GitHub Setup</title>
+<style>
+body{font:16px/1.6 "SF Pro Text","Bangla Sangam MN",sans-serif;background:#dcecff;color:#0d2a52;margin:0;padding:24px 16px}
+main{max-width:720px;margin:auto}h1{font-weight:400;font-size:32px;line-height:1.25;margin:0 0 8px}
+section{background:rgba(255,255,255,.6);border:1px solid #fff;border-radius:18px;padding:18px;margin:16px 0}
+input{width:100%;font:inherit;padding:10px 12px;border:1px solid #9bbbe8;border-radius:10px;margin:8px 0;box-sizing:border-box}
+button{font:inherit;font-size:14px;background:#1f5fd6;color:#fff;border:0;border-radius:999px;padding:8px 16px;cursor:pointer}
+#msg{min-height:24px;font-size:14px}.ok{color:#0a7a3d}.err{color:#b3261e}li{margin:4px 0}
+</style></head><body><main>
+<h1>SB-কে GitHub দাও</h1>
+<section>
+<ol>
+<li>Token name: <b>SB</b>, মেয়াদ ৯০ দিন।</li>
+<li>Repository access: <b>All repositories</b> (বা বেছে নেওয়া)।</li>
+<li>Permissions: <b>Issues → Read and write</b>, <b>Pull requests → Read-only</b>। বাকি সব বন্ধ।</li>
+<li>Generate token চেপে টোকেনটা কপি করো, নিচে বসাও।</li>
+</ol>
+<input id="key" type="password" placeholder="github_pat_... এখানে পেস্ট করো" autocomplete="off">
+<button id="save">সংরক্ষণ করো</button>
+</section>
+<div id="msg"></div>
+<script>
+document.querySelector('#save').onclick=async()=>{const m=document.querySelector('#msg');try{m.textContent='যাচাই হচ্ছে…';m.className='';
+const r=await fetch('/api/setup/github',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify({key:document.querySelector('#key').value.trim()})});
+const j=await r.json();if(!r.ok)throw new Error(j.error);document.querySelector('#key').value='';m.textContent='টোকেন ঠিক আছে, সংরক্ষিত। এবার SB-র পাতায় যাও।';m.className='ok'}catch(e){m.textContent=e.message;m.className='err'}};
+</script></main></body></html>

@@ -1,0 +1,44 @@
+const assert = require('assert'), { parse, parseAll } = require('./maccontrol'), R = require('./routines');
+const apps = ['Safari', 'Notes', 'WhatsApp', 'Calculator', 'Adobe Premiere Pro 2026', 'Adobe Premiere Pro 2027', 'Terminal', 'Claude', 'Discord'];
+const p = q => parse(q, apps);
+assert.deepEqual(p('ভলিউম ৪০ করো'), { op: 'volume', value: 40 });
+assert.deepEqual(p('volume বাড়াও'), { op: 'step', by: 15 });
+assert.deepEqual(p('সাউন্ড কমিয়ে দাও'), { op: 'step', by: -15 });
+assert.equal(p('মিউট করো ভলিউম').op, 'mute'); assert.equal(p('volume unmute').op, 'unmute'); assert.equal(p('ভলিউম কত').op, 'volumeStatus');
+assert.equal(p('Wi-Fi চালু করো').op, 'wifiOn'); assert.equal(p('ওয়াইফাই চালু আছে?').op, 'wifiStatus');
+assert.equal(p('wifi বন্ধ করো').op, 'wifiOff'); assert.equal(p('wifi বন্ধ করো').risky, undefined, 'no card'); assert.equal(p('wifi অফ করো').op, 'wifiOff'); assert.equal(p('wifi অন করো').op, 'wifiOn');
+assert.deepEqual(p('হোয়াটসঅ্যাপ খোলো'), { op: 'open', app: 'WhatsApp' });
+assert.deepEqual(p('তুমি আমার WhatsApp on করে দাও just'), { op: 'open', app: 'WhatsApp' }); assert.deepEqual(parseAll('তোর WhatsApp on করো', apps), [{ op: 'open', app: 'WhatsApp' }]);
+assert.deepEqual(p('amar WhatsApp khulo'), { op: 'open', app: 'WhatsApp' }); assert.deepEqual(p('WhatsApp on koro'), { op: 'open', app: 'WhatsApp' }); assert.deepEqual(p('Discord bondho koro'), { op: 'quit', app: 'Discord' }); assert.equal(p('wifi off koro').op, 'wifiOff'); assert.deepEqual(p('brightness komao'), { op: 'brightStep', by: -15 }); assert.deepEqual(parseAll('volume 30 koro ar brightness 50 koro', apps).map(x => x.op), ['volume', 'brightness']);
+assert.deepEqual(p('open notes'), { op: 'open', app: 'Notes' });
+assert.equal(p('premiere খোলো').app, 'Adobe Premiere Pro 2027');
+assert.deepEqual(p('Discord বন্ধ করো'), { op: 'quit', app: 'Discord' }); assert.deepEqual(p('তার WhatsApp অন করো'), { op: 'open', app: 'WhatsApp' });
+assert.deepEqual(p('মাস্টার, ল্যাপটপের brightness টা পঞ্চাশ percent করো'), { op: 'brightness', value: 50 });
+assert.deepEqual(p('ব্রাইটনেস কমাও'), { op: 'brightStep', by: -15 }); assert.deepEqual(p('স্ক্রিনের আলো বাড়াও'), { op: 'brightStep', by: 15 }); assert.equal(p('brightness কত').op, 'brightStatus'); assert.deepEqual(p('ভলিউম ত্রিশ পার্সেন্ট করো'), { op: 'volume', value: 30 });
+assert.deepEqual(parseAll('Wi-Fi অন করো আর brightness ৫০ করো', apps).map(x => x.op), ['wifiOn', 'brightness']); assert.deepEqual(parseAll('মাস্টার, ল্যাপটপের brightness টা পঞ্চাশ percent করো', apps), [{ op: 'brightness', value: 50 }]); assert.equal(parseAll('মাস্টার, brightness টা কত', apps)[0].op, 'brightStatus');
+assert.equal(parseAll('ভলিউম ২০ করো আর একটা গল্প বলো', apps), null, 'half a request is not guessed');
+for (const a of ['Safari বন্ধ করো', 'Terminal বন্ধ করো', 'quit claude']) assert.equal(p(a).op, 'refuse', a);
+for (const t of ['ভিডিওর সাউন্ড কমাও', 'আজকের খবর বলো', 'দরজা খোলো', 'রিভিউটা বন্ধ করো', 'আমার মন খারাপ', 'ঘরের আলো বন্ধ করো', 'দরজা অন করো', 'একটা গল্প বলো যেখানে Notes খোলো নিয়ে অনেক অনেক কথা আছে আর আরও অনেক কিছু লেখা আছে এখানে']) assert.equal(p(t), null, t);
+
+const r = q => R.parse(q);
+let a = r('প্রতিদিন সকাল ৮টায় পানি খাওয়া মনে করিয়ে দিও');
+assert.equal(a.type, 'add'); assert.equal(a.hour, 8); assert.equal(a.minute, 0); assert.equal(a.days, null); assert.equal(a.kind, 'remind'); assert(a.text.includes('পানি'), a.text);
+assert.equal(r('প্রতিদিন রাত ১০টায় ঘুমের কথা বলবে').hour, 22);
+assert.equal(r('প্রতিদিন রাত ১২টায় ঘুমের কথা বলবে').hour, 0);
+a = r('প্রতিদিন বিকাল সাড়ে ৫টায় Classroom এর খবর জানিও'); assert.equal(a.hour, 17); assert.equal(a.minute, 30); assert.equal(a.kind, 'classroom');
+a = r('প্রতি সোমবার দুপুর ২টায় ব্রিফিং দিও'); assert.deepEqual(a.days, [1]); assert.equal(a.hour, 14); assert.equal(a.kind, 'brief');
+assert.equal(r('every day 7 am mail check remind me').hour, 7);
+a = r('প্রতিদিন রাত ১১টা ৫৯ টায় পড়া মনে করিয়ে দিও'); assert.equal(a.hour, 23); assert.equal(a.minute, 59); assert.equal(a.text, 'পড়া');
+assert.equal(r('প্রতিদিন ৫টায় পড়া মনে করিয়ে দিও').type, 'ask');
+assert.equal(r('প্রতিদিন পড়া মনে করিয়ে দিও').type, 'ask');
+assert.equal(r('আমি প্রতিদিন সকাল ৮টায় ঘুম থেকে উঠি'), null);
+assert.equal(r('আমার রুটিন দেখাও').type, 'list'); assert.deepEqual(r('automation ২ বাদ দাও'), { type: 'remove', n: 2 });
+
+const at = (d, h, m) => new Date(2026, 10, d, h, m);
+let x = R.create({ hour: 8, minute: 0, days: null, kind: 'remind', text: 'x' }, at(23, 7, 0), 1);
+assert(!R.isDue(x, at(23, 7, 59))); assert(R.isDue(x, at(23, 8, 0))); assert(R.isDue(x, at(23, 11, 0)), 'late after sleep still runs');
+x.last = R.dayKey(at(23, 8, 0)); assert(!R.isDue(x, at(23, 9, 0)), 'once a day'); assert(R.isDue(x, at(24, 8, 0)));
+assert(!R.isDue(R.create({ hour: 8, minute: 0, days: null, kind: 'remind', text: 'x' }, at(23, 9, 0), 2), at(23, 9, 1)), 'past time starts tomorrow');
+const mon = R.create({ hour: 8, minute: 0, days: [1], kind: 'remind', text: 'x' }, at(22, 7, 0), 3); // 23 Nov 2026 is a Monday
+assert(!R.isDue(mon, at(22, 9, 0))); assert(R.isDue(mon, at(23, 9, 0)));
+console.log('maccontrol + routines tests ok');

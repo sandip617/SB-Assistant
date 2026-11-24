@@ -1,0 +1,19 @@
+# Never commit keys. Real keys live in ~/Library/Application Support/SB/.env, outside this folder.
+.env
+.env.*
+!.env.example
+
+# Mac app build output and its packages (rebuilt with desktop/build.sh)
+desktop/node_modules/
+desktop/dist/
+
+# Local backups, Mac and tool clutter
+.backup/
+.DS_Store
+.impeccable/
+
+# Personal photos
+*.heic
+
+# unused since SB became a Mac app
+start-sb.command

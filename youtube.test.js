@@ -1,0 +1,17 @@
+const assert = require('assert'), Y = require('./youtube');
+const p = q => Y.parse(q);
+assert.deepEqual(p('YouTube-এ Tum Hi Ho গানটা বাজাও'), { op: 'play', query: 'Tum Hi Ho' });
+assert.deepEqual(p('আমার একটা গান বাজাও'), { op: 'ask' });
+assert.deepEqual(p('Tum hi ho bajao'), { op: 'play', query: 'Tum hi ho' });
+assert.deepEqual(p('play Believer song on youtube'), { op: 'play', query: 'Believer' });
+assert.deepEqual(p('ইউটিউবে অরিজিৎ সিংয়ের গান চালাও'), { op: 'play', query: 'অরিজিৎ সিংয়ের' });
+assert.equal(p('গানটা থামাও').op, 'pause'); assert.equal(p('গান বন্ধ করো').op, 'pause'); assert.equal(p('pause').op, 'pause');
+assert.equal(p('গানটা আবার চালাও').op, 'resume'); assert.equal(p('পরের গান দাও').op, 'next'); assert.equal(p('next song').op, 'next');
+for (const q of ['এই ভিডিওটা বুঝিয়ে দাও https://youtu.be/abcdefghijk', 'WhatsApp চালাও', 'ভলিউম বাড়াও', 'টাইমার চালাও', 'আজকের খবর বলো', 'YouTube কী?', 'Physics পড়তে বসছি']) assert.equal(p(q), null, q);
+assert(Y.searchUrl('a b&c').endsWith('a%20b%26c'));
+assert(Y.playResult('playing\nTum Hi Ho').includes('Tum Hi Ho')); assert(/Auto-Play/.test(Y.playResult('paused\nX'))); assert(/খুঁজে পেলাম না/.test(Y.playResult('NOTFOUND')));
+assert.equal(Y.controlResult('pause', 'ok'), 'গান থামালাম।'); assert(/চলছে না/.test(Y.controlResult('next', 'NONE')));
+assert.deepEqual(p('তার জন্য তুমি Safarite YouTube এ গিয়ে আ- পূর্ণতা গানটা চালু করো'), { op: 'play', query: 'পূর্ণতা' });
+assert.deepEqual(p('পূর্ণতা গানটা চালু করো'), { op: 'play', query: 'পূর্ণতা' });
+assert.equal(p('গানটা চালু করো').op, 'resume'); assert.equal(p('গানটা আবার চালাও').op, 'resume');
+console.log('youtube tests ok');

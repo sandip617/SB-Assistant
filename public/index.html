@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB</title>
+<style>
+:root{
+  --font:"SF Pro Text","Helvetica Neue","Bangla Sangam MN","Kohinoor Bangla","Noto Sans Bengali",sans-serif;
+  --mono:"SF Mono",Menlo,monospace;
+}
+body[data-t="c"]{--bg:#cfe6ff;--bg2:radial-gradient(circle at 20% 15%,#f4faff 0,transparent 45%),radial-gradient(circle at 85% 80%,#9ccbff 0,transparent 50%),linear-gradient(160deg,#dcecff,#a9d0ff);
+  --fg:#0d2a52;--muted:#4d6f9c;--acc:#2f7bff;
+  --panel:rgba(255,255,255,.38);--bd:rgba(255,255,255,.7);--blur:22px;--glow:0 8px 32px rgba(40,100,200,.18);--me:rgba(47,123,255,.2);--ai:rgba(255,255,255,.55)}
+
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--fg);background:var(--bg2),var(--bg);transition:background .5s,color .5s;
+  display:flex;flex-direction:column;overflow:hidden}
+
+.bar{display:flex;gap:8px;align-items:center;justify-content:center;padding:12px 16px;flex-wrap:wrap;z-index:2}
+.bar button{font:inherit;font-size:13px;color:var(--fg);background:var(--panel);border:1px solid var(--bd);border-radius:999px;
+  padding:8px 16px;cursor:pointer;backdrop-filter:blur(var(--blur));transition:.2s}
+.bar button:hover{border-color:var(--acc)}
+.bar button.on{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:var(--glow)}
+body[data-t="c"] .bar button.on,body[data-t="c"] form button{background:#1f5fd6;border-color:#1f5fd6} /* white text needs >=4.5:1 */
+/* draft cards */
+.card{border:1px solid var(--acc);flex:none;max-height:45vh;overflow:auto}
+.card pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:6px 0 10px;max-height:140px;overflow:auto}
+.card .row{display:flex;gap:8px}
+.card button{font:inherit;font-size:14px;border:0;border-radius:999px;padding:8px 16px;cursor:pointer;background:#1f5fd6;color:#fff}
+.card button.g{background:transparent;color:var(--fg);border:1px solid var(--bd)}
+.sub{display:none;gap:8px;align-items:center}
+body[data-t="c"] .sub{display:flex;flex-wrap:wrap;flex-basis:100%;justify-content:center}
+
+.hud{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr 320px;gap:16px;padding:0 16px 16px}
+.panel{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:16px;backdrop-filter:blur(var(--blur));
+  -webkit-backdrop-filter:blur(var(--blur));box-shadow:var(--glow);display:flex;flex-direction:column;min-height:0;transition:.5s}
+body[data-t="c"] .panel{border-radius:22px}
+h3{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}
+
+.left{display:flex;flex-direction:column;gap:16px;min-height:0}
+#fbDlg{margin:auto;width:min(620px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:18px;color:#10233f;background:#f4faff;border:1px solid #fff;border-radius:18px;box-shadow:0 16px 48px rgba(13,42,82,.35)}
+#fbDlg::backdrop{background:rgba(13,42,82,.35)}
+.fbTop{display:flex;justify-content:space-between;align-items:center}
+.fbTop h2{font-size:22px;font-weight:500}
+#fbClose{min-width:36px;min-height:36px;font:inherit;color:inherit;background:none;border:1px solid #b8cfee;border-radius:50%;cursor:pointer}
+.fbNote{font-size:13px;color:#4a5f7c;margin:2px 0 8px}
+#fbDlg section{padding:12px 0;border-top:1px solid #d3e3f7}
+#fbDlg h3{color:#30496b;margin-bottom:8px}
+#fbDlg label{display:block;font-size:13px;margin-bottom:4px}
+#fbCaption{width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid #9bbbe8;border-radius:10px;background:#fff;color:inherit;resize:vertical}
+#fbDrop{margin-top:8px;padding:16px;text-align:center;border:1.5px dashed #7fa6dc;border-radius:12px;background:#fff;cursor:pointer}
+#fbDrop.over{background:#e4f0ff;border-color:#1f5fd6}
+#fbDrop input{display:block;width:100%;margin-top:8px;font-size:12px}
+#fbFileName{min-height:20px;font-size:13px;margin:6px 0;overflow-wrap:anywhere}
+.fbMain{font:inherit;font-size:14px;color:#fff;background:#1f5fd6;border:0;border-radius:999px;padding:9px 18px;cursor:pointer}
+.fbMain:disabled{opacity:.6;cursor:default}
+.fbPost{display:block;width:100%;text-align:left;font:inherit;font-size:14px;color:inherit;background:none;border:0;border-bottom:1px solid #d3e3f7;padding:8px 2px;cursor:pointer;overflow-wrap:anywhere}
+.fbPost small{display:block;font-size:12px;color:#4a5f7c}
+.right{display:flex;flex-direction:column;gap:16px;min-height:0;min-width:0}
+.right>.panel{flex:1 1 0;min-height:0}
+.chat{position:relative}
+.chatTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.chatTop h3{margin:0}
+.chatTop button{font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:999px;padding:5px 10px;margin-left:4px;cursor:pointer}
+.chatTop button[aria-expanded="true"]{background:#1f5fd6;border-color:#1f5fd6;color:#fff}
+#chatsPanel{position:absolute;left:10px;right:10px;top:50px;bottom:10px;z-index:6;display:flex;flex-direction:column;gap:8px;padding:10px;background:#f4faff;color:#10233f;border:1px solid var(--bd);border-radius:14px;box-shadow:0 8px 28px rgba(13,42,82,.25)}
+#chatRows{flex:1;min-height:0;overflow:auto;font-size:13px}
+.chatrow{display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(16,35,63,.14)}
+.chatrow.on{background:rgba(31,95,214,.1)}
+.chatrow input{flex:none;width:18px;height:18px;margin-left:4px}
+.chatrow button{flex:1;min-width:0;text-align:left;font:inherit;color:inherit;background:none;border:0;padding:8px 4px;cursor:pointer;overflow-wrap:anywhere}
+.chatrow small{display:block;font-size:11px;color:#4a5f7c}
+#chatsDel{flex:none;font:inherit;font-size:13px;color:#fff;background:#b3261e;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+.inboxTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.inboxTop h3{margin:0}
+#inboxNote{font-size:12px;color:var(--muted);margin-bottom:6px;line-height:1.4}
+#inboxList{flex:1;min-height:0;overflow:auto;font-size:13px}
+.mailrow{display:block;width:100%;text-align:left;font:inherit;background:none;border:0;border-bottom:1px solid var(--bd);padding:7px 0;color:inherit;cursor:pointer;line-height:1.35;overflow-wrap:anywhere}
+.mailrow small{display:block;color:var(--muted);font-size:11px}
+.mailrow.new{font-weight:600}
+.mailrow.new::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:6px}
+.clock{text-align:center}
+#time{font-family:var(--mono);font-size:34px;font-weight:300;letter-spacing:.04em;color:var(--acc)}
+body[data-t="c"] #time{color:var(--fg)}
+#date{font-size:13px;color:var(--muted);margin-top:4px}
+.tasks{flex:1;overflow:auto}
+.task{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--bd);font-size:14px;line-height:1.4}
+.task:last-child{border:0}
+.task i{width:8px;height:8px;border-radius:50%;background:var(--acc);margin-top:6px;flex:none;box-shadow:0 0 8px var(--acc)}
+.task.done{opacity:.45;text-decoration:line-through}
+.task button{margin-left:auto;flex:none;font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:999px;padding:4px 10px;cursor:pointer}
+.task small{display:block;color:var(--muted);font-size:11px}
+#classBox{margin-top:12px;border-top:1px solid var(--bd);padding-top:10px}
+#classBox summary{cursor:pointer;font-size:13px;font-weight:600;padding:6px 0}
+.subject{margin-top:10px;font-size:12px;font-weight:600;color:var(--acc)}
+.subject small{color:var(--muted);font-weight:400;margin-left:6px}
+
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0}
+canvas{width:100%;flex:1;min-height:0}
+.label{text-align:center;padding-bottom:6px}
+.label b{display:block;font-size:22px;font-weight:300;letter-spacing:.32em;text-transform:uppercase}
+#status{font-size:13px;color:var(--muted);margin-top:6px;height:18px}
+
+#log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+.m{max-width:88%;padding:9px 13px;font-size:14px;line-height:1.5;border:1px solid var(--bd);border-radius:14px}
+.m.ai{background:var(--ai);align-self:flex-start;border-bottom-left-radius:4px}
+.m.me{background:var(--me);align-self:flex-end;border-bottom-right-radius:4px}
+.sources{white-space:normal;margin-top:8px;padding-top:6px;border-top:1px solid var(--bd);font-size:11px;color:var(--muted)}
+.sources a{display:block;margin-top:4px;font-size:12px;color:var(--acc);overflow-wrap:anywhere}
+.m em{display:block;font-style:normal;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+form{display:flex;gap:8px;margin-top:12px}
+input{flex:1;font:inherit;font-size:14px;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:999px;padding:10px 14px;outline:none}
+input:focus{border-color:var(--acc)}
+input::placeholder{color:var(--muted)}
+#in{min-width:0;flex:1 1 0}
+form button:last-child{flex:none}
+#attachBtn{flex:none;width:42px;padding:0!important;font-size:17px}
+#attachChip{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:6px 10px;font-size:12px;border:1px solid var(--bd);border-radius:10px;overflow-wrap:anywhere}
+#attachChip button{flex:none;min-width:26px;min-height:26px;font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+form button{font:inherit;border:0;border-radius:999px;background:var(--acc);color:#fff;padding:0 16px;cursor:pointer}
+
+.chips{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;z-index:1}
+.chips span{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);border:1px solid var(--bd);background:var(--panel);
+  backdrop-filter:blur(var(--blur));border-radius:999px;padding:5px 11px}
+.count{text-align:center}
+#cd{font-family:var(--mono);font-size:26px;font-weight:300;color:var(--acc);letter-spacing:.04em}
+body[data-t="c"] #cd{color:var(--fg)}
+.count p{font-size:13px;color:var(--muted);margin-top:4px}
+@media (max-width:980px){
+  .card{position:fixed;left:16px;right:16px;bottom:16px;z-index:10;max-height:55vh;background:#f4faff;box-shadow:0 8px 32px rgba(13,42,82,.35)} /* narrow window: the left column is off-screen */
+  body{overflow:auto}
+  .hud{flex:none;grid-template-columns:1fr;grid-auto-rows:auto} /* the page scrolls here, so panels keep their full height */
+  .left>.panel{flex:none}
+  .stage{order:-1;height:62vw;min-height:320px}
+  .right>.panel{flex:none}
+  .inbox{height:320px}
+  .chat{height:240px}
+}
+#setDlg{margin:auto;width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid var(--bd);border-radius:18px;padding:20px;color:#0d2a52;background:#f4f9ff;box-shadow:var(--glow)}
+#setDlg::backdrop{background:rgba(13,42,82,.35)}
+#setDlg h2{margin:0 0 14px;font-size:18px}#setDlg h3{margin:16px 0 8px;font-size:14px;letter-spacing:0;text-transform:none}
+#setDlg label{display:block;font-size:13px;margin:10px 0 4px}
+#setDlg select,#setDlg input[type=range]{width:100%;min-height:36px;font:inherit}
+#setDlg .check{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:36px}
+#setDlg .check input{flex:none;width:18px;height:18px;min-height:0;margin:0;padding:0}
+#setDlg .rt{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-top:1px solid rgba(13,42,82,.12)}
+#setDlg button{font:inherit;font-size:13px;min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid #1f5fd6;background:#fff;color:#1f5fd6;cursor:pointer}
+#setDlg #setClose{display:block;margin:16px 0 0 auto;background:#1f5fd6;color:#fff}
+body:not(.adv-on) .adv{display:none!important}
+#micchip{font-size:13px;font-weight:600;letter-spacing:0;padding:6px 14px}
+#micchip.live{background:#c62828;border-color:#c62828;color:#fff}
+.task.late i{background:#c62828;box-shadow:none}.task.late small{color:#a31515}
+.lateHead,.lateHead small{color:#a31515}
+.noDate{margin-top:10px;font-size:13px}.noDate summary{cursor:pointer;color:var(--muted)}
+.studyBox{margin-top:10px;text-align:left;font-size:13px;border-top:1px solid var(--bd);padding-top:8px}
+.studyTop{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
+.studyTop b{font-size:12px;color:var(--muted)}
+.studyTop button,#focusBar button{font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--acc);border-radius:999px;padding:4px 10px;min-height:28px;cursor:pointer}
+#studyToday{max-height:96px;overflow:auto}
+.studyItem{display:flex;gap:7px;align-items:flex-start;padding:3px 0;line-height:1.35}.studyItem input{flex:none;margin-top:2px}
+.studyNote{color:#a31515;font-size:12px;padding:2px 0}
+#focusWeek{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+#focusBar{position:absolute;top:44px;left:50%;transform:translateX(-50%);z-index:2;display:flex;align-items:center;gap:10px;background:#1f5fd6;color:#fff;border-radius:999px;padding:6px 8px 6px 16px;box-shadow:var(--glow);max-width:calc(100% - 16px)}
+#focusBar button{color:#fff;border-color:#fff}
+#focusTime{font-family:var(--mono);font-size:20px}#focusLabel{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.focusing #inboxList,body.focusing #inboxNote{display:none}
+body.focusing .inbox::after{content:"Focus চলছে, mail পরে দেখবে";font-size:13px;color:var(--muted)}
+#planDlg{margin:auto;width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid var(--bd);border-radius:18px;padding:20px;color:#0d2a52;background:#f4f9ff;box-shadow:var(--glow)}
+#planForm{display:block;padding:0;border:0;background:none}
+#planDlg::backdrop{background:rgba(13,42,82,.35)}#planDlg h2{font-size:18px}#planDlg h3{font-size:14px;margin:14px 0 6px;letter-spacing:0;text-transform:none}
+#planDlg label.f{display:block;font-size:13px;margin:8px 0 3px}#planDlg input:not([type=checkbox]),#planDlg textarea{width:100%;min-height:36px;font:inherit;padding:6px 8px;border:1px solid #9db8dc;border-radius:8px}
+#planDlg button{font:inherit;font-size:13px;min-height:34px;padding:5px 12px;border-radius:999px;border:1px solid #1f5fd6;background:#fff;color:#1f5fd6;cursor:pointer}
+#planDlg .main{background:#1f5fd6;color:#fff;margin-top:8px}.planTop{display:flex;justify-content:space-between;align-items:center}
+.planExam{margin-top:8px}.planHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.planHead small{color:#4d6f9c}.planHead button{margin-left:auto}
+.planDay{display:flex;gap:12px;font-size:13px;padding:6px 0;border-top:1px solid rgba(13,42,82,.12)}.planDay b{flex:0 0 112px;font-weight:600}
+#brainchip.off{background:#c62828;border-color:#c62828;color:#fff;font-size:13px;font-weight:600;letter-spacing:0}
+#backupNote{font-size:13px;margin-top:10px;color:var(--muted)}
+</style>
+<link rel="stylesheet" href="/hole.css">
+</head>
+<body data-t="c" class="hole">
+
+<div class="bar">
+  <button id="hf">🎧 Hands-free: OFF</button>
+  <button id="ww">Wake word: OFF</button>
+  <button id="morning">☀ সকালের ব্রিফিং</button>
+  <button id="night">🌙 রাতের সারসংক্ষেপ</button>
+  <button id="poemTest" class="adv">🎭 Poem test</button>
+  <button id="fbOpen">📘 Post review</button>
+  <button id="setOpen">⚙ Settings</button>
+  <span class="sub">
+    <button data-s="sphere" class="on">Sphere</button><button data-s="reactor">Reactor</button><button data-s="ring" class="adv">Ring Spectrum</button><button data-s="vortex" class="adv">Vortex</button><button data-s="blob" class="adv">Glass Blob</button><button data-s="avatar" class="adv">Hologram</button>
+  </span>
+</div>
+
+<div class="hud">
+  <div class="left">
+    <div class="panel clock"><div id="time">--:--:--</div><div id="date"></div></div>
+    <div class="panel count">
+      <h3>পরীক্ষা কাউন্টডাউন</h3>
+      <div id="cd">--</div>
+      <p id="examName"></p>
+      <div class="studyBox">
+        <div class="studyTop"><b>আজকের পড়া</b><span><button id="focusStart">⏱ পড়তে বসছি</button> <button id="planOpen">প্ল্যান</button></span></div>
+        <div id="studyToday"></div><small id="focusWeek"></small>
+      </div>
+    </div>
+    <div class="panel card" id="mail" hidden>
+      <h3>ইমেইল খসড়া</h3>
+      <div id="mailTo" style="font-size:14px"></div>
+      <pre id="mailBody"></pre>
+      <div class="row"><button id="mailSend">✉ পাঠাও</button><button id="mailNo" class="g">বাতিল</button></div>
+    </div>
+    <div class="panel card" id="formCard" hidden>
+      <h3>ফর্ম পূরণের প্রস্তাব</h3>
+      <div id="formList" style="font-size:14px"></div>
+      <div class="row"><button id="formGo">✎ বসাও</button><button id="formNo" class="g">বাতিল</button></div>
+    </div>
+    <div class="panel card" id="fileCard" hidden>
+      <h3>ফাইল বদলের অনুমতি</h3>
+      <div id="fileText" style="font-size:14px;overflow-wrap:anywhere;margin-bottom:10px"></div>
+      <div class="row"><button id="fileGo">হ্যাঁ, করো</button><button id="fileNo" class="g">না</button></div>
+    </div>
+    <div class="panel card" id="browseCard" hidden>
+      <h3>Safari-তে করার অনুমতি</h3>
+      <div id="browseText" style="font-size:14px;overflow-wrap:anywhere;margin-bottom:10px"></div>
+      <div class="row"><button id="browseGo">হ্যাঁ, করো</button><button id="browseNo" class="g">বাতিল</button></div>
+    </div>
+    <div class="panel card" id="ghCard" hidden>
+      <h3>GitHub issue খসড়া</h3>
+      <div id="ghText" style="font-size:14px"></div>
+      <div class="row"><button id="ghGo">পোস্ট করো</button><button id="ghNo" class="g">বাতিল</button></div>
+    </div>
+    <div class="panel tasks">
+      <h3>আজকের কাজ · Today</h3>
+      <div id="tasks"></div>
+      <details id="classBox" open><summary id="classHead">Classroom</summary><div id="classwork"></div></details>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="chips"><span id="micchip" role="status">🎤 মাইক বন্ধ</span><span id="brainchip" role="status">BRAIN · CLAUDE</span></div>
+    <div id="focusBar" role="timer" hidden><span id="focusLabel"></span><span id="focusTime">25:00</span><button id="focusStop">থামাও</button></div>
+    <canvas id="cv"></canvas>
+    <div class="label"><b>Hey SB</b><div id="status">শুনছি… আমি এখানেই আছি</div></div>
+  </div>
+
+  <div class="right">
+  <div class="panel inbox">
+    <div class="inboxTop"><h3>College Mail</h3></div>
+    <p id="inboxNote" role="status"></p>
+    <div id="inboxList">Mail আনছি…</div>
+  </div>
+  <div class="panel chat">
+    <div class="chatTop"><h3>Chat</h3><div><button id="newChat">＋ নতুন chat</button><button id="chatsBtn" aria-expanded="false">আগের chat</button></div></div>
+    <div id="chatsPanel" hidden>
+      <div id="chatRows"></div>
+      <button id="chatsDel" hidden>Delete</button>
+    </div>
+    <div id="log">
+      <div class="m ai"><em>SB</em>আমি এখানেই আছি। লেখো, নয়তো "Hands-free" চালু করে সরাসরি কথা বলো।</div>
+    </div>
+    <div id="attachChip" role="status" hidden></div>
+    <form id="f"><button type="button" id="attachBtn" aria-label="নোট, PDF, ছবি বা ভিডিও attach করো" title="নোট, PDF, ছবি বা ভিডিও attach করো">📎</button><input id="attachFile" type="file" hidden accept=".pdf,.doc,.docx,.rtf,.txt,.md,.csv,.xlsx,video/mp4,video/quicktime,video/webm,.m4v,image/jpeg,image/png,image/heic,image/webp"><input id="in" placeholder="SB-কে কিছু বলো…" autocomplete="off"><button>Send</button></form>
+  </div>
+  </div>
+</div>
+
+<dialog id="setDlg" aria-labelledby="setTitle">
+  <h2 id="setTitle">Settings</h2>
+  <h3>ব্যক্তিত্ব</h3>
+  <label for="setTone">কথা বলার ঢং</label>
+  <select id="setTone"><option value="sweet">মিষ্টি ও যত্নশীল</option><option value="playful">দুষ্টু ও মজার</option><option value="calm">শান্ত</option><option value="pro">গোছানো, কাজের কথা</option></select>
+  <label class="check"><input type="checkbox" id="setLong"> একটু লম্বা উত্তর দেবে</label>
+  <h3>ভয়েস</h3>
+  <label for="setStab">আবেগ <small>(বামে বেশি আবেগ, ডানে বেশি স্থির)</small></label>
+  <input type="range" id="setStab" min=".25" max=".75" step=".05">
+  <label for="setSim">গলার মিল <small>(ডানে আসল গলার বেশি কাছে)</small></label>
+  <input type="range" id="setSim" min=".5" max="1" step=".05">
+  <h3>জাগানো</h3>
+  <label class="check"><input type="checkbox" id="setJarvis"> "Hey JARVIS" বললেও জাগবে</label>
+  <h3>Notion</h3>
+  <p id="notionNote" role="status" style="font-size:13px;margin:0 0 6px"></p>
+  <label for="notionKey">Notion key</label>
+  <input id="notionKey" type="password" autocomplete="off" spellcheck="false" style="width:100%;min-height:36px;font:inherit">
+  <label for="notionPage">যে page-এ নোট থাকবে, তার link</label>
+  <input id="notionPage" autocomplete="off" spellcheck="false" style="width:100%;min-height:36px;font:inherit;margin-bottom:8px">
+  <button id="notionSave">যুক্ত করো</button>
+  <h3>Advanced</h3>
+  <label class="check"><input type="checkbox" id="setAdv"> GitHub, ফর্ম পূরণ, Poem test, Automation আর বাকি ডিজাইন দেখাও</label>
+  <div class="adv"><label for="setLook">Design</label><select id="setLook"><option value="hole">Black Hole</option><option value="ice">পুরনো Ice Glass</option></select></div>
+  <div class="adv"><h3>Automation</h3><div id="setRoutines"></div></div>
+  <div id="appBox" hidden><h3>App</h3><label class="check"><input type="checkbox" id="setLogin"> Mac চালু হলে SB নিজে চালু হবে</label><p style="font-size:13px;margin:4px 0 0">যেকোনো জায়গা থেকে Option + Space চাপলে SB দেখাবে বা লুকাবে।</p><button id="permAsk" type="button" style="margin-top:8px">সব অনুমতি চাও</button><p id="permNote" role="status" style="font-size:13px;margin-top:6px"></p></div>
+  <p id="backupNote" role="status"></p>
+  <button id="setClose">বন্ধ করো</button>
+</dialog>
+<dialog id="planDlg" aria-labelledby="planTitle">
+  <div class="planTop"><h2 id="planTitle">পড়ার প্ল্যান</h2><button id="planClose" aria-label="বন্ধ করো">✕</button></div>
+  <form id="planForm">
+    <h3>নতুন পরীক্ষা</h3>
+    <label class="f" for="planName">বিষয়</label><input id="planName" required maxlength="80">
+    <label class="f" for="planDate">পরীক্ষার তারিখ ও সময়</label><input id="planDate" type="datetime-local" required>
+    <label class="f" for="planChapters">Chapter (প্রতি লাইনে একটা)</label><textarea id="planChapters" rows="4" required></textarea>
+    <label class="f" for="planFile">অথবা syllabus দাও (PDF, Word, ছবি)</label><input id="planFile" type="file" accept=".pdf,.doc,.docx,.rtf,.txt,.md,image/jpeg,image/png,image/heic,image/webp">
+    <button class="main">প্ল্যান বানাও</button>
+    <p id="planNote" role="status" style="font-size:13px;margin-top:6px"></p>
+  </form>
+  <h3>Chapter টিক দাও</h3><div id="planExams"></div>
+  <h3>দিন ধরে প্ল্যান</h3><div id="planDays"></div>
+</dialog>
+<dialog id="fbDlg" aria-labelledby="fbTitle">
+  <div class="fbTop"><h2 id="fbTitle">Post review</h2><button id="fbClose" aria-label="বন্ধ করো">✕</button></div>
+  <p class="fbNote">SB শুধু দেখে বলবে, কখনো পোস্ট করবে না।</p>
+  <section>
+    <h3>পোস্ট করার আগে</h3>
+    <label for="fbCaption">Caption</label>
+    <textarea id="fbCaption" rows="4" placeholder="তোমার caption এখানে লেখো…"></textarea>
+    <label id="fbDrop" for="fbFile">ভিডিও বা ছবি এখানে ফেলো, অথবা চাপ দিয়ে বাছো<input id="fbFile" type="file" accept="video/mp4,video/quicktime,video/webm,.m4v,image/jpeg,image/png,image/heic,image/webp"></label>
+    <div id="fbFileName" role="status"></div>
+    <button id="fbCheck" class="fbMain">পোস্ট করার আগে চেক করো</button>
+  </section>
+  <section>
+    <h3>পোস্ট করার পরে</h3>
+    <div id="fbPosts">লোড হচ্ছে…</div>
+  </section>
+</dialog>
+
+<script src="/blackhole.js"></script>
+<script>
+const $=s=>document.querySelector(s), body=document.body;
+const cv=$('#cv'), ctx=cv.getContext('2d');
+let W=0,H=0;
+function resize(){const d=devicePixelRatio||1,r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',resize);
+
+// clock (Bangla date)
+function setNum(el,s){if(!body.classList.contains('hole')){if(el.textContent!==s)el.textContent=s;return}if(el.children.length!==s.length){el.innerHTML=[...s].map(c=>`<span class="dg">${c==='<'?'':c}</span>`).join('');return}[...s].forEach((c,i)=>{const d=el.children[i];if(d.textContent!==c){d.textContent=c;d.classList.remove('tick');void d.offsetWidth;d.classList.add('tick')}})}
+function tick(){const n=new Date();
+  setNum($('#time'),n.toLocaleTimeString('en-GB'));
+  $('#date').textContent=n.toLocaleDateString('bn-BD',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+let exam=null;
+function cd(){if(!exam){$('#cd').textContent='--';$('#examName').textContent='পরীক্ষার তারিখ ঠিক করা নেই — SB-কে বলো';return}
+  $('#examName').textContent=exam.name;
+  let s=Math.max(0,(new Date(exam.date)-Date.now())/1000|0);const p=n=>String(n).padStart(2,'0');
+  setNum($('#cd'),`${p(s/86400|0)}d ${p(s%86400/3600|0)}:${p(s%3600/60|0)}:${p(s%60)}`)}
+tick();cd();setInterval(()=>{tick();cd()},1000);
+
+// email drafts are never sent by SB herself: only this button sends
+function showMail(p){$('#mail').hidden=!p;if(p){$('#mailTo').textContent='প্রাপক: '+p.to+' · বিষয়: '+p.subject;$('#mailBody').textContent=p.body}}
+const mailCall=async u=>{if(u==='/api/email/send')status('মেইল পাঠাচ্ছি…');try{const r=await fetch(u,{method:'POST',headers:{'x-bilashi':'1'}});const j=await r.json();if(!r.ok)throw new Error(j.error);status(IDLE);return true}catch(e){bubble('ai','SB','⚠ '+e.message);status(IDLE);return false}};
+$('#mailSend').onclick=async()=>{$('#mailSend').disabled=true;if(await mailCall('/api/email/send'))bubble('ai','SB','ইমেইল পাঠিয়ে দিলাম।');$('#mailSend').disabled=false;refresh()};
+$('#mailNo').onclick=async()=>{await mailCall('/api/email/cancel');refresh()};
+// form fill proposals: SB only proposes; this button writes into Safari's page (never submits)
+function showForm(f){$('#formCard').hidden=!f;if(f)$('#formList').innerHTML=esc(f.title||'')+'<br>'+f.items.map(i=>'<b>'+esc(i.label||'?')+'</b>: '+esc(i.value==='true'?'✓ বাছা':i.value==='false'?'✗ বাদ':i.value)).join('<br>')}
+$('#formGo').onclick=async()=>{$('#formGo').disabled=true;if(await mailCall('/api/form/fill'))bubble('ai','SB','বসিয়ে দিয়েছি। একবার দেখে নিজেই জমা দাও।');$('#formGo').disabled=false;refresh()};
+$('#formNo').onclick=async()=>{await mailCall('/api/form/cancel');refresh()};
+// GitHub issue drafts: only this button posts
+function showGh(g){$('#ghCard').hidden=!g;if(g)$('#ghText').innerHTML='<b>'+esc(g.repo)+'</b><br>'+esc(g.title)+'<br>'+esc(g.body)}
+$('#ghGo').onclick=async()=>{$('#ghGo').disabled=true;if(await mailCall('/api/gh/post'))bubble('ai','SB','GitHub-এ issue খুলে দিলাম।');$('#ghGo').disabled=false;refresh()};
+$('#ghNo').onclick=async()=>{await mailCall('/api/gh/cancel');refresh()};
+// file changes: SB only proposes; this button or a spoken yes runs it
+function showFile(o){$('#fileCard').hidden=!o;if(o)$('#fileText').textContent=o.op==='delete'?'Trash-এ পাঠাবে: '+o.from:(o.op==='rename'?'নাম বদলাবে: ':'সরাবে: ')+o.from+' → '+o.to}
+$('#fileGo').onclick=async()=>{$('#fileGo').disabled=true;if(await mailCall('/api/file/go'))bubble('ai','SB','করে দিয়েছি।');$('#fileGo').disabled=false;refresh()};
+$('#fileNo').onclick=async()=>{await mailCall('/api/file/cancel');refresh()};
+function showBrowse(o){$('#browseCard').hidden=!o;if(o)$('#browseText').textContent=o.label}
+$('#browseGo').onclick=async()=>{$('#browseGo').disabled=true;try{const r=await fetch('/api/browse/go',{method:'POST',headers:{'x-bilashi':'1'}}),j=await r.json();bubble('ai','SB',r.ok?j.text:'⚠ '+j.error)}catch{bubble('ai','SB','⚠ করতে পারিনি')}$('#browseGo').disabled=false;refresh()};
+$('#browseNo').onclick=async()=>{await mailCall('/api/browse/cancel');refresh()};
+// tasks + exam come from the local server (data.json)
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function showOffline(off){const c=$('#brainchip');c.classList.toggle('off',!!off);c.textContent=off?'⚠ এখন offline':'BRAIN · CLAUDE'}
+async function checkHealth(){let off=true,net=false;try{const j=await (await fetch('/api/health',{method:'POST',headers:{'x-bilashi':'1'}})).json();off=j.offline;net=j.netUp}catch{}showOffline(off);if(!net)ttsOn=false;else if($('#brainchip').dataset.was==='1')refresh();$('#brainchip').dataset.was=net?'':'1'}
+setInterval(checkHealth,10000);addEventListener('offline',()=>showOffline(true));addEventListener('online',checkHealth);
+async function refresh(){try{const j=await (await fetch('/api/state')).json();{const n=j.study?.exams?.[0],o=j.exam&&new Date(j.exam.date)>Date.now()?j.exam:null;exam=n&&(!o||n.date<new Date(o.date))?{name:n.name,date:n.date}:o}ttsOn=j.tts&&j.netUp;showOffline(j.offline);$('#backupNote').textContent=j.backup?'শেষ backup: '+j.backup+' (শেষ ৭ দিনের থাকে)':'';if(ttsOn)loadFillers();showMail(j.pending);showForm(j.form);showGh(j.gh);showFile(j.fileOp);showBrowse(j.browseOp);if(!$('#setDlg').open)useSettings(j.settings);
+  window.renderStudy?.(j);
+  const ts=[...j.tasks].sort((a,b)=>a.done-b.done||(a.due||'z').localeCompare(b.due||'z'));
+  $('#tasks').innerHTML=ts.map(t=>`<div class="task${t.done?' done':''}"><i></i><span>${esc(t.text)}${t.due?`<small>${new Date(t.due).toLocaleString('bn-BD',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</small>`:''}</span></div>`).join('')
+    ||'<div class="task"><span>কোনো কাজ নেই। SB-কে বলো কী যোগ করবে।</span></div>'}catch{}}
+// Mail box: university inbox only; a dot marks unread
+let mailData=[];
+const mailDate=d=>new Date(d).toLocaleString('bn-BD',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+function showInbox(){const acc=mailData,items=acc.flatMap(a=>a.items.map(m=>({...m,addr:a.addr}))).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,40);
+  const bad=acc.map(a=>{const n=a.items[0];return a.error?a.addr+': পড়া যাচ্ছে না':!n?a.addr+': কোনো mail আসেনি, লগইন দরকার':Date.now()-new Date(n.at)>14*864e5?`${a.addr}: শেষ mail ${new Date(n.at).toLocaleDateString('bn-BD',{day:'numeric',month:'short'})}, নতুন mail আসছে না`:''}).filter(Boolean);
+  $('#inboxNote').textContent=bad.length?bad.join(' · '):items.filter(m=>!m.read).length+'টা না-পড়া (সর্বশেষ '+items.length+'টার মধ্যে)';
+  $('#inboxList').innerHTML=items.map(m=>`<button class="mailrow${m.read?'':' new'}" data-addr="${esc(m.addr)}" data-id="${+m.id}">${esc(m.subject||'(বিষয় নেই)')}<small>${esc(m.from.replace(/\s*<.*$/,'').replace(/"/g,''))} · ${mailDate(m.at)}</small></button>`).join('')||'এখানে কোনো mail নেই।'}
+async function loadInbox(){try{const r=await fetch('/api/inbox',{method:'POST',headers:{'x-bilashi':'1'}});if(!r.ok)throw 0;mailData=await r.json();showInbox()}catch{$('#inboxNote').textContent='Mail পড়তে পারিনি, Mac Mail খোলা আছে কিনা দেখো।'}}
+$('#inboxList').onclick=e=>{const b=e.target.closest('button');if(b)fetch('/api/inbox/open',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify({addr:b.dataset.addr,id:+b.dataset.id})})};
+loadInbox();setInterval(loadInbox,120000);
+$('#classwork').onclick=async e=>{const b=e.target.closest('button');if(!b)return;b.disabled=true;await fetch('/api/classwork/done',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify({id:+b.dataset.id})});refresh()};
+refresh();
+
+// talking state
+let talking=false,level=0,wakeOn=false,busy=false;
+const hist=[],IDLE='শুনছি… আমি এখানেই আছি',status=s=>$('#status').textContent=s;
+const OUTSIDE='(এই উত্তর internet বা ফাইল থেকে দিয়েছিলাম, লেখাটা চ্যাটে আছে)'; // web or file text never goes back to the brain as if it were conversation
+// every page load is a new chat; a chat file appears only after its first message
+const WELCOME=$('#log').innerHTML,newChatId=()=>'c'+Date.now()+[...crypto.getRandomValues(new Uint8Array(3))].map(b=>b.toString(16).padStart(2,'0')).join('');
+let chatId=newChatId();
+const chatApi=(u,b)=>fetch(u,{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify(b||{})}).then(r=>{if(!r.ok)throw 0;return r.json()});
+const canSwitch=()=>{if(busy||talking){status('আগে কথাটা শেষ হোক…');return false}return true};
+function startChat(id){chatId=id||newChatId();hist.length=0;$('#log').innerHTML=WELCOME}
+function closeChats(){$('#chatsPanel').hidden=true;$('#chatsBtn').setAttribute('aria-expanded','false')}
+function picked(){const n=document.querySelectorAll('#chatRows input:checked').length;$('#chatsDel').hidden=!n;$('#chatsDel').textContent=n+'টা chat delete করো'}
+async function loadChats(){try{const a=await chatApi('/api/chats');
+  $('#chatRows').innerHTML=a.map(c=>`<div class="chatrow${c.id===chatId?' on':''}"><input type="checkbox" data-id="${esc(c.id)}" aria-label="${esc(c.title).replace(/"/g,'&quot;')} বাছাই করো"><button data-id="${esc(c.id)}">${esc(c.title)}<small>${c.updated?new Date(c.updated).toLocaleString('bn-BD',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):''}</small></button></div>`).join('')||'এখনো কোনো পুরনো chat নেই।';picked()}catch{$('#chatRows').textContent='Chat-এর লিস্ট আনতে পারিনি।'}}
+$('#newChat').onclick=()=>{if(!canSwitch())return;startChat();closeChats()};
+$('#chatsBtn').onclick=()=>{if(!$('#chatsPanel').hidden)return closeChats();$('#chatsPanel').hidden=false;$('#chatsBtn').setAttribute('aria-expanded','true');loadChats()};
+$('#chatRows').onchange=picked;
+$('#chatRows').onclick=async e=>{const b=e.target.closest('button');if(!b||!canSwitch())return;try{const a=await chatApi('/api/chats/open',{id:b.dataset.id});startChat(b.dataset.id);
+  for(const m of a){const me=m.role==='user',d=bubble(me?'me':'ai',me?'You':'SB',m.content);if(m.sources&&m.sources.length)addSources(d,m.sources);hist.push({role:m.role,content:m.untrusted?OUTSIDE:m.content})}closeChats()}catch{status('Chat-টা খুলতে পারিনি')}};
+$('#chatsDel').onclick=async()=>{const ids=[...document.querySelectorAll('#chatRows input:checked')].map(x=>x.dataset.id);if(!ids.length||!confirm(ids.length+'টা chat চিরতরে মুছে দেব? Memory থাকবে।'))return;
+  try{await chatApi('/api/chats/delete',{ids});if(ids.includes(chatId)&&canSwitch())startChat();loadChats()}catch{status('Delete করতে পারিনি')}};
+function bubble(cls,who,text){const d=document.createElement('div');d.className='m '+cls;d.innerHTML='<em>'+who+'</em>';d.append(text);$('#log').append(d);$('#log').scrollTop=1e9;return d}
+function addSources(d,a){d.style.whiteSpace='pre-line';const w=document.createElement('div');w.className='sources';w.textContent='Sources';a.forEach(x=>{const l=document.createElement('a');l.href=x.url;l.target='_blank';l.rel='noopener noreferrer';l.textContent=x.title;w.append(l)});d.append(w);$('#log').scrollTop=1e9}
+
+// speech out: ElevenLabs; the Mac's Bangla voice (if any) is the fallback
+let bnVoice=null;const pick=()=>bnVoice=speechSynthesis.getVoices().find(v=>/^bn/i.test(v.lang))||null;
+speechSynthesis.onvoiceschanged=pick;pick();
+let ttsOn=false; // set from /api/state: true when the server has an ElevenLabs key
+function speakLocal(text){return new Promise(done=>{
+  talking=true;status('SB বলছে…');
+  const end=()=>{talking=false;status(IDLE);done()};
+  if(!bnVoice){setTimeout(end,Math.min(9000,1200+text.length*70));return} // no Bangla voice: just animate
+  const u=new SpeechSynthesisUtterance(text);u.voice=bnVoice;u.lang=bnVoice.lang;u.onend=u.onerror=end;speechSynthesis.speak(u)})}
+
+// speed: sentences are voiced as they arrive; a cached short clip plays right after you finish speaking
+const fillers=[];let fillN=0,fillersLoaded=false;
+function loadFillers(){if(fillersLoaded)return;fillersLoaded=true;[0,1,2].forEach(i=>fetch('/api/filler/'+i,{method:'POST',headers:{'x-bilashi':'1'}}).then(r=>r.ok?r.blob():null).then(b=>{if(b)fillers[i]=URL.createObjectURL(b)}).catch(()=>{}))}
+const playUrl=u=>new Promise((ok,no)=>{const a=new Audio(u);window.SBHole?.on&&SBHole.follow(a,u);const t=setTimeout(ok,45000),end=f=>x=>{clearTimeout(t);f(x)};a.onended=end(ok);a.onerror=end(no);a.play().catch(end(no))});
+function voiceQueue(){let chain=Promise.resolve(),broken=false;const q={spoke:false,
+  filler(){const u=fillers[fillN++%3];if(!u)return;talking=true;chain=chain.then(()=>playUrl(u)).catch(()=>{})},
+  add(s){q.spoke=true;talking=true;status('SB বলছে…');
+    const g=ttsOn&&!broken?fetch('/api/tts',{method:'POST',headers:{'x-bilashi':'1'},body:JSON.stringify({text:s})}).then(async r=>{if(!r.ok)throw new Error((await r.json()).error);return URL.createObjectURL(await r.blob())}):null;
+    if(g)g.catch(()=>{});
+    chain=chain.then(async()=>{try{if(!g||broken)throw 0;await playUrl(await g)}catch(e){if(e&&!broken)bubble('ai','SB','⚠ ElevenLabs: '+e.message);broken=true;await speakLocal(s.replace(/\[[a-z ]+\]\s*/gi,''));talking=true}})},
+  done(){return chain.then(()=>{talking=false;status(IDLE)})}};return q}
+
+// plays the same two lines twice: old flat voice, then the expressive one
+$('#poemTest').onclick=async e=>{if(talking||busy)return;const b=e.currentTarget;b.disabled=true;talking=true;
+  try{for(const[k,l]of[['before','আগের ভয়েস'],['after','নতুন আবেগী ভয়েস']]){status(l+' বাজছে…');const r=await fetch('/api/poem-test/'+k,{method:'POST',headers:{'x-bilashi':'1'}});if(!r.ok)throw new Error((await r.json()).error);await playUrl(URL.createObjectURL(await r.blob()))}}
+  catch(x){bubble('ai','SB','⚠ Poem test: '+(x.message||'বাজাতে পারিনি'))}
+  talking=false;status(IDLE);b.disabled=false};
+// brain: ask the local server (which holds the API key)
+// confirm or cancel a draft by saying so: matched here in code, whole sentence only, so nothing the model reads can trigger it
+const YES=/^(?:(?:হ্যাঁ|হা|ok|okay|ওকে|ঠিক আছে|আচ্ছা)[\s,।]*)?(?:পাঠাও|পাঠিয়ে দাও|পাঠায়ে দাও|পাঠায়া দাও|সেন্ড করো|send|send it|পোস্ট করো|post|বসাও|বসিয়ে দাও|কপি করো)[\s।!.]*$/i;
+const NO=/^(?:না[\s,।]*)?(?:বাতিল(?: করো)?|cancel|থাক|পাঠিও না|পাঠাইও না|মুছে ফেলো)[\s।!.]*$/i;
+const FILE_YES=/^(?:yes|হ্যাঁ|হ্যা|ইয়েস)[\s।!.]*$/i; // a bare yes confirms only a file change, never a mail or post
+const DRAFTS=[['fileOp','/api/file/go','/api/file/cancel','করে দিয়েছি।'],['browseOp','/api/browse/go','/api/browse/cancel','করে দিয়েছি।'],['pending','/api/email/send','/api/email/cancel','ইমেইল পাঠিয়ে দিলাম।'],['form','/api/form/fill','/api/form/cancel','বসিয়ে দিয়েছি। একবার দেখে নিজেই জমা দাও।'],['gh','/api/gh/post','/api/gh/cancel','GitHub-এ issue খুলে দিলাম।']];
+async function draftCommand(text){
+  const fy=FILE_YES.test(text),yes=YES.test(text),no=NO.test(text);if(!yes&&!no&&!fy)return false;
+  const j=await (await fetch('/api/state')).json(),a=DRAFTS.filter(d=>j[d[0]]&&(no||['fileOp','browseOp'].includes(d[0])===fy));if(!a.length)return false;
+  let say='একসাথে কয়েকটা খসড়া আছে, কার্ড থেকে বাটন চাপো।';
+  if(a.length===1)say=await mailCall(no?a[0][2]:a[0][1])?(no?'আচ্ছা, বাতিল করলাম।':a[0][3]):'';
+  refresh();if(say){bubble('ai','SB',say);const v=voiceQueue();v.add(say);await v.done()}return true}
+async function ask(text,voice){
+  if(busy){held.push(text);return}
+  busy=true;bubble('me','You',text);
+  if(await draftCommand(text).catch(()=>false)){busy=false;flushHeard();return}
+  hist.push({role:'user',content:text});status('ভাবছি…');
+  const v=voiceQueue();if(voice&&ttsOn)v.filler();
+  let reply,sources,outside;
+  try{const r=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify({chatId,attach:takeAttach(),fb:(fbAsk=>(fbReq=null,fbAsk))(fbReq),messages:hist.slice(-20)})});
+    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||r.status)}
+    const rd=r.body.getReader(),dec=new TextDecoder();let b='';
+    for(;;){const{done,value}=await rd.read();if(done)break;b+=dec.decode(value,{stream:true});let i;
+      while((i=b.indexOf('\n'))>=0){const e=JSON.parse(b.slice(0,i));b=b.slice(i+1);if(e.error)throw new Error(e.error);if(e.status)status(e.status);if(e.s)v.add(e.s);if(e.text){reply=e.text;sources=e.sources;outside=e.untrusted}}}
+    if(!reply)throw new Error('উত্তর পাইনি')}
+  catch(e){hist.pop();bubble('ai','SB','⚠ '+e.message);busy=false;await v.done();flushHeard();return}
+  hist.push({role:'assistant',content:outside?OUTSIDE:reply});const said=bubble('ai','SB',reply);if(sources&&sources.length)addSources(said,sources);if(!v.spoke)v.add(reply);busy=false;refresh();
+  await v.done();flushHeard();
+}
+// reminders: server hands over tasks whose time has come (once); speak them when SB is free
+async function checkDue(){if(talking||busy)return;
+  try{const{due,learned=[]}=await (await fetch('/api/due',{method:'POST',headers:{'x-bilashi':'1'}})).json();
+    if(learned.length){bubble('ai','Memory','🧠 মনে রাখলাম: '+learned.join(', '));refresh()}
+    if(!due.length)return;
+    const clock=due.filter(d=>d.timer).map(d=>d.text),rest=due.filter(d=>!d.timer).map(d=>d.text),t=[...clock,...(rest.length?['মনে করিয়ে দিচ্ছি: '+rest.join('। আর ')]:[])].join(' ');
+    bubble('ai','SB','⏰ '+t);refresh();const v=voiceQueue();v.add(t);await v.done()}catch{}}
+setInterval(checkDue,15000);
+// Post review: review only; nothing here can publish
+let fbReq=null,fbPicked=null;
+const fbName=f=>{fbPicked=f||null;$('#fbFileName').textContent=f?f.name+' বাছা হয়েছে':''};
+async function loadFbPosts(){const box=$('#fbPosts');box.textContent='লোড হচ্ছে…';try{const r=await fetch('/api/fb/posts',{method:'POST',headers:{'x-bilashi':'1'}}),j=await r.json();if(!r.ok)throw new Error(j.error);
+  box.innerHTML=j.posts.map(p=>`<button class="fbPost" data-id="${esc(p.id).replace(/"/g,'&quot;')}">${esc(p.caption||'(caption নেই)')}<small>${esc(p.label)}</small></button>`).join('')||'কোনো পোস্ট পাইনি।'}catch(e){box.textContent=e.message||'পোস্ট আনতে পারিনি।'}}
+$('#fbOpen').onclick=()=>{$('#fbDlg').showModal();loadFbPosts()};
+$('#fbClose').onclick=()=>$('#fbDlg').close();
+$('#fbFile').onchange=e=>fbName(e.target.files[0]);
+['dragover','dragleave','drop'].forEach(t=>$('#fbDrop').addEventListener(t,e=>{e.preventDefault();$('#fbDrop').classList.toggle('over',t==='dragover');if(t==='drop')fbName(e.dataTransfer.files[0])}));
+$('#fbPosts').onclick=e=>{const b=e.target.closest('.fbPost');if(!b||!canSwitch())return;fbReq={postId:b.dataset.id};$('#fbDlg').close();ask('এই পোস্টটা analysis করো')};
+$('#fbCheck').onclick=async()=>{const b=$('#fbCheck'),caption=$('#fbCaption').value.trim();if(!caption&&!fbPicked){$('#fbFileName').textContent='Caption লেখো অথবা একটা ফাইল দাও।';return}if(!canSwitch())return;b.disabled=true;
+  try{let upload;if(fbPicked){$('#fbFileName').textContent='ফাইল নিচ্ছি…';const r=await fetch('/api/fb/upload',{method:'POST',headers:{'x-bilashi':'1','x-file-name':encodeURIComponent(fbPicked.name)},body:fbPicked}),j=await r.json();if(!r.ok)throw new Error(j.error);upload=j.id}
+    fbReq={caption,upload};$('#fbCaption').value='';$('#fbFile').value='';fbName(null);$('#fbDlg').close();ask('পোস্ট করার আগে চেক করো')}catch(e){$('#fbFileName').textContent=e.message||'ফাইল নেওয়া গেল না।'}b.disabled=false};
+$('#morning').onclick=()=>ask('সকালের ব্রিফিং দাও।');
+$('#night').onclick=()=>ask('রাতের সারসংক্ষেপ দাও।');
+let attached=null;
+const showAttach=t=>{const c=$('#attachChip');c.hidden=!t;c.textContent='';if(t){const s=document.createElement('span');s.textContent=t;c.append(s);if(attached){const x=document.createElement('button');x.type='button';x.textContent='✕';x.setAttribute('aria-label','ফাইলটা বাদ দাও');x.onclick=()=>{attached=null;showAttach('')};c.append(x)}}};
+const takeAttach=()=>{const a=attached;attached=null;showAttach('');return a};
+$('#attachBtn').onclick=()=>$('#attachFile').click();
+$('#attachFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;attached=null;showAttach('📎 '+f.name+' নিচ্ছি…');$('#attachBtn').disabled=true;try{const r=await fetch('/api/fb/upload',{method:'POST',headers:{'x-bilashi':'1','x-file-name':encodeURIComponent(f.name)},body:f}),j=await r.json();if(!r.ok)throw new Error(j.error);attached={id:j.id,name:f.name};showAttach('📎 '+f.name+' তৈরি। এবার বলো: quiz নাও, বা syllabus থেকে প্ল্যান বানাও।');$('#in').focus()}catch(x){showAttach('⚠ '+(x.message||'ফাইল নেওয়া গেল না'))}$('#attachBtn').disabled=false};
+$('#f').onsubmit=e=>{e.preventDefault();const v=$('#in').value.trim()||(attached?'এই ফাইলটা দিয়ে কী করব?':'');if(v){$('#in').value='';ask(v)}};
+
+// speech in (hands-free): mic stays open; voice activity detection starts a recording when you speak and
+// ends it after ~1.2s of silence; the clip goes to ElevenLabs speech-to-text, and SB answers only after the pause outlasts pauseFor(). Not listening while SB talks/thinks.
+// Safari's own recognizer is not used. While ON, everything you say is sent to ElevenLabs (uses credits).
+let stream,an,buf,mr,chunks=[],voiceMs=0,lastVoice=0,segStart=0,vadOn=false,drop=false;
+async function openMic(){
+  if(stream)return true;
+  if(!ttsOn){bubble('ai','SB','⚠ শোনার জন্য ElevenLabs key লাগবে। localhost:3000/setup.html-এ key দাও।');return false}
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}
+  catch(e){bubble('ai','SB','⚠ মাইক পাইনি ('+e.name+')। macOS Settings → Privacy & Security → Microphone-এ SB বা Safari চালু আছে কি দেখো।');return false}
+  const ac=new AudioContext();ac.resume();an=ac.createAnalyser();an.fftSize=1024;ac.createMediaStreamSource(stream).connect(an);buf=new Float32Array(an.fftSize);
+  if(!vadOn){vadOn=true;setInterval(vad,100)}return true}
+function dropSeg(){drop=true;if(mr&&mr.state==='recording')mr.stop()} // discard the current clip
+function vad(){
+  if(!wakeOn||talking||busy){if(mr&&mr.state==='recording')dropSeg();return} // wakeOn = hands-free is on
+  an.getFloatTimeDomainData(buf);let s=0;for(const x of buf)s+=x*x;const loud=Math.sqrt(s/buf.length)>0.02,now=Date.now(); // 0.02: raise if room noise triggers it
+  if(loud){lastVoice=now;if(!mr||mr.state!=='recording')startSeg();voiceMs+=100}
+  if(mr&&mr.state==='recording'&&(now-lastVoice>1200||now-segStart>20000))mr.stop()}
+function startSeg(){
+  drop=false;chunks=[];voiceMs=0;segStart=Date.now();mr=new MediaRecorder(stream);
+  mr.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  mr.onstop=()=>{const type=mr.mimeType||'audio/mp4';if(!drop&&voiceMs>=400)transcribe(new Blob(chunks,{type}));else flushHeard()};
+  mr.start()}
+let held=[],sttN=0,sendTimer=0;
+// A thinking pause must not end the sentence: wait longer when the words so far sound unfinished.
+const UNFINISHED=/(?:^|[\s,])(?:আর|এবং|কিন্তু|তবে|মানে|যে|তাই|তারপর|তারপরে|এরপর|এরপরে|কারণ|যদি|বা|অথবা|নাকি|মতো|জন্য|সাথে|উম+|আ+|এ+|হুম+|ইয়ে|and|but|so|because|or|um+|uh+|like|then|the|to|of|with)[\s,…-]*$|(?:,|…|\.\.\.)\s*$/i;
+const pauseFor=t=>UNFINISHED.test(t)?6000:2800;
+function flushHeard(){clearTimeout(sendTimer);if(sttN||busy||talking||(mr&&mr.state==='recording'))return;const t=held.filter(Boolean).join(' ');if(!t){held=[];status(IDLE);return}
+  status('শুনছি…');sendTimer=setTimeout(()=>{if(sttN||busy||talking||(mr&&mr.state==='recording'))return;const x=held.filter(Boolean).join(' ');held=[];if(x)heard(x)},Math.max(0,lastVoice+pauseFor(t)-Date.now()))}
+async function transcribe(blob){
+  status('বুঝছি…');const i=held.length;held.push('');sttN++;
+  try{const r=await fetch('/api/stt',{method:'POST',headers:{'x-bilashi':'1','content-type':blob.type},body:blob});
+    const j=await r.json();if(!r.ok)throw new Error(j.error);
+    held[i]=(j.text||'').trim()} // ignore empty / noise
+  catch(e){bubble('ai','SB','⚠ শুনতে পারিনি: '+e.message)}
+  sttN--;flushHeard()}
+// wake word ("Hey SB" / "হে এসবি"): when ON, only speech that starts with her name is answered;
+// if you say just her name, the next thing you say (within 15s) is the command.
+const WAKE_SB=/(?:hey|hay|hi|হে|হেই|হ্যাঁ)?\s*(?<![a-z])(?:s\.?\s?b|এস\.?\s?বি|এসবি)(?![a-z])[\s,।]*/i,WAKE_J=/(?:hey|hay|hi|হে|হেই|হ্যাঁ)?\s*(?<![a-z])(?:s\.?\s?b|jarvis|জার্ভিস|জারভিস|এস\.?\s?বি|এসবি)(?![a-z])[\s,।]*/i;
+let WAKE=WAKE_SB;
+let needWake=false,awakeUntil=0;
+function heard(t){
+  if(t.length<2){status(IDLE);return}
+  if(!needWake){ask(t,true);return}
+  if(Date.now()<awakeUntil){awakeUntil=0;ask(t.replace(WAKE,'').trim()||t,true);return}
+  const m=t.match(WAKE);if(!m){status(IDLE);return} // not for her: ignore
+  const cmd=t.replace(WAKE,'').trim();
+  if(cmd)ask(cmd,true);else{awakeUntil=Date.now()+15000;status('বলো, শুনছি…')}}
+$('#ww').onclick=()=>{needWake=!needWake;$('#ww').classList.toggle('on',needWake);$('#ww').textContent='Wake word: '+(needWake?'ON':'OFF');
+  if(needWake&&!wakeOn)$('#hf').click()};
+$('#hf').onclick=async()=>{if(!wakeOn&&!await openMic())return;
+  wakeOn=!wakeOn;$('#hf').classList.toggle('on',wakeOn);$('#hf').textContent='🎧 Hands-free: '+(wakeOn?'ON':'OFF');
+  $('#micchip').textContent=wakeOn?'🔴 মাইক চালু':'🎤 মাইক বন্ধ';$('#micchip').classList.toggle('live',wakeOn);
+  if(!wakeOn){dropSeg();if(needWake){needWake=false;$('#ww').classList.remove('on');$('#ww').textContent='Wake word: OFF'}}status(IDLE)};
+
+// ---------- drawing ----------
+const TAU=Math.PI*2;
+function wave(t,cx,y,L,col){ // voice bars
+  ctx.fillStyle=col;const n=41;
+  for(let i=0;i<n;i++){const d=Math.abs(i-(n-1)/2)/((n-1)/2),h=3+L*(1-d*.8)*34*Math.abs(Math.sin(t*7+i*1.7)*Math.cos(t*3+i));
+    ctx.fillRect(cx-n*3.5+i*7,y-h/2,3,h)}
+}
+const P=[];for(let i=0,N=750;i<N;i++){const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*2.39996;P.push([Math.cos(a)*r,y,Math.sin(a)*r,Math.random()*TAU])}
+let cs='sphere';
+const pickShape=s=>{cs=s;document.querySelectorAll('.sub button').forEach(x=>x.classList.toggle('on',x.dataset.s===s))};
+document.querySelectorAll('.sub button').forEach(b=>b.onclick=()=>{pickShape(b.dataset.s);saveSet({shape:b.dataset.s})});
+const saveSet=o=>fetch('/api/settings',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify(o)}).catch(()=>{});
+let curLook=null;
+function applyLook(l){l=l==='ice'?'ice':'hole';if(l===curLook)return;curLook=l;const hole=l==='hole';body.classList.toggle('hole',hole);if(hole){if(!window.SBHole?.start($('#cv')))body.classList.remove('hole-gl')}else window.SBHole?.stop();$('#setLook').value=hole?'hole':'ice';resize();['#time','#cd'].forEach(s=>{const e=$(s);e.textContent=e.textContent})}
+function useSettings(o){if(!o)return;applyLook(o.look);WAKE=o.jarvis?WAKE_J:WAKE_SB;body.classList.toggle('adv-on',!!o.advanced);$('#setAdv').checked=!!o.advanced;const shape=o.advanced||['sphere','reactor'].includes(o.shape)?o.shape:'sphere';if(shape!==cs)pickShape(shape);$('#setTone').value=o.tone;$('#setLong').checked=o.long;$('#setStab').value=o.stability;$('#setSim').value=o.similarity;$('#setJarvis').checked=o.jarvis}
+async function loadSettings(){const j=await (await fetch('/api/state')).json();useSettings(j.settings);$('#notionNote').textContent=j.notion?'✅ Notion যুক্ত আছে।':'এখনো যুক্ত হয়নি।';$('#setRoutines').innerHTML=j.routines.map(r=>`<div class="rt"><span>${esc(r.label)}: ${esc(r.what)}</span><button data-id="${+r.id}" aria-label="${esc(r.what)} বাদ দাও">বাদ দাও</button></div>`).join('')||'<small>এখনো নেই। বলো: প্রতিদিন সকাল ৮টায় পানি খাওয়া মনে করিয়ে দিও।</small>'}
+$('#notionSave').onclick=async()=>{const n=$('#notionNote');n.textContent='দেখছি…';try{const r=await fetch('/api/setup/notion',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify({key:$('#notionKey').value.trim(),page:$('#notionPage').value.trim()})}),j=await r.json();if(!r.ok)throw new Error(j.error);$('#notionKey').value='';$('#notionPage').value='';n.textContent='✅ Notion যুক্ত হয়েছে।'}catch(e){n.textContent='⚠ '+e.message}};
+$('#setOpen').onclick=()=>{$('#setDlg').showModal();loadSettings()};$('#setClose').onclick=()=>$('#setDlg').close();
+$('#setTone').onchange=e=>saveSet({tone:e.target.value});$('#setLong').onchange=e=>saveSet({long:e.target.checked});$('#setStab').onchange=e=>saveSet({stability:+e.target.value});$('#setSim').onchange=e=>saveSet({similarity:+e.target.value});
+$('#setAdv').onchange=async e=>{const on=e.target.checked;body.classList.toggle('adv-on',on);if(!on&&!['sphere','reactor'].includes(cs))pickShape('sphere');await saveSet({advanced:on});refresh()};
+$('#permAsk').onclick=async()=>{const n=$('#permNote');n.textContent='macOS একটা একটা করে জিজ্ঞেস করবে, প্রতিটায় Allow/OK চাপো…';try{const r=await (await fetch('/api/permissions',{method:'POST',headers:{'x-bilashi':'1'}})).json();const bad=Object.entries(r).filter(([,v])=>v!=='ok').map(([k])=>k);n.textContent=bad.length?'এখনো অনুমতি নেই: '+bad.join(', ')+'। System Settings → Privacy & Security-এ SB চালু করো।':'✅ সব অনুমতি আছে।'}catch{n.textContent='অনুমতি দেখতে পারিনি।'}};
+if(window.sbApp){$('#appBox').hidden=false;sbApp.getLogin().then(v=>{$('#setLogin').checked=!!v}).catch(()=>{});$('#setLogin').onchange=async e=>{e.target.checked=!!await sbApp.setLogin(e.target.checked).catch(()=>!e.target.checked)}}
+$('#setLook').onchange=e=>{applyLook(e.target.value);saveSet({look:e.target.value})};
+addEventListener('sbholelost',()=>{body.classList.remove('hole-gl')});
+$('#setJarvis').onchange=e=>{WAKE=e.target.checked?WAKE_J:WAKE_SB;saveSet({jarvis:e.target.checked})};
+$('#setRoutines').onclick=async e=>{const b=e.target.closest('button');if(!b)return;await fetch('/api/routines/delete',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify({id:+b.dataset.id})});loadSettings()};
+const backdrop=(cx,cy,R)=>{const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.3);
+  g.addColorStop(0,'rgba(60,130,255,.75)');g.addColorStop(.7,'rgba(90,160,255,.35)');g.addColorStop(1,'rgba(120,180,255,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,R*1.3,0,TAU);ctx.fill()};
+function C(...a){({sphere:C1,ring:C2,vortex:C3,blob:C4,reactor:C5,avatar:C6})[cs](...a)}
+function C5(t,cx,cy,R,L){ // layered 3D energy core: tilted segmented rings around a pulsing centre
+  backdrop(cx,cy,R*1.6);const seg=[];
+  [[1.5,.35,.5,.3,48],[1.25,-.55,-.7,.9,36],[1,1.1,.9,-.6,30],[.74,-1.2,-1.2,.4,24]].forEach(([r,ax,sp,ay,n])=>{const c1=Math.cos(ax+t*.12),s1=Math.sin(ax+t*.12),c2=Math.cos(ay),s2=Math.sin(ay),rr=r*R*(1+L*.05);
+    const pt=a=>{const x=Math.cos(a),y0=Math.sin(a),y=y0*c1,z=y0*s1,X=x*c2+z*s2,Z=-x*s2+z*c2,k=1/(1.8-Z*.45)*1.8;return[cx+X*rr*k,cy+y*rr*k,Z]};
+    for(let i=0;i<n;i++){const a=i/n*TAU+t*sp,b=a+TAU/n*.68,p=pt(a),q=pt((a+b)/2),u=pt(b);seg.push([q[2],p,q,u,.4+.6*Math.abs(Math.sin(i*1.3+t*4))*(.45+L*.55)])}});
+  seg.sort((a,b)=>a[0]-b[0]);ctx.lineCap='round';const drawn=[];
+  const core=()=>{const P2=R*(.42+L*.16+.025*Math.sin(t*3)),g=ctx.createRadialGradient(cx,cy,0,cx,cy,P2*1.8);g.addColorStop(0,'#fff');g.addColorStop(.35,'rgba(215,238,255,.98)');g.addColorStop(.65,'rgba(90,170,255,.72)');g.addColorStop(1,'rgba(47,123,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,P2*1.8,0,TAU);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;for(let i=0;i<3;i++){const a=t*1.4+i*TAU/3;ctx.beginPath();ctx.arc(cx,cy,P2*.92,a,a+1.25);ctx.stroke()}};
+  let done=false;for(const[z,p,q,u,g]of seg){if(!done&&z>0){core();done=true}const d=(z+1)/2;ctx.strokeStyle=`rgba(255,255,255,${(.22+d*.72)*g+.08})`;ctx.lineWidth=1.2+d*3.2;ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.quadraticCurveTo(q[0],q[1],u[0],u[1]);ctx.stroke()}
+  if(!done)core();ctx.lineCap='butt'}
+function C6(t,cx,cy,R,L){ // original hologram face drawn from scan lines; the mouth follows her voice
+  backdrop(cx,cy,R*1.55);const yaw=Math.sin(t*.45)*.32,cy0=cy-R*.05,S=R*1.28,cyaw=Math.cos(yaw),syaw=Math.sin(yaw);
+  const width=y=>y<-1||y>1.3?0:y<.62?.74*Math.sqrt(Math.max(0,1-Math.pow((y+.18)/.86,2)))*(y>.1?1-(y-.1)*.3:1):y<.86?.27:Math.min(.95,.27+(y-.86)*1.65);
+  const proj=(x,y,z)=>{const X=x*cyaw+z*syaw,Z=-x*syaw+z*cyaw,k=1/(1.9-Z*.42)*1.9;return[cx+X*S*k,cy0+y*S*k,Z]},band=((t*.42)%1)*2.6-1.2;
+  for(let row=0;row<46;row++){const y=-1+row/45*2.3,w=width(y);if(w<=.01)continue;const glow=Math.max(0,1-Math.abs(y-band)*7),neck=y>.62;
+    for(let i=0;i<42;i++){const a=-Math.PI/2+i/41*Math.PI,x=Math.sin(a)*w,z=Math.cos(a)*w*(neck?.5:.82),p=proj(x,y,z);if(p[2]<-.1)continue;const d=(p[2]+.2)/1.1;ctx.fillStyle=`rgba(255,255,255,${Math.min(1,.2+d*.55+glow*.6)})`;const q=1+d*1.3+glow;ctx.fillRect(p[0]-q/2,p[1]-q/2,q,q)}}
+  const blink=(t%4.6)<.13?.12:1;ctx.strokeStyle='#fff';ctx.fillStyle='#fff';ctx.shadowColor='#fff';ctx.shadowBlur=10;
+  [-1,1].forEach(side=>{const p=proj(side*.3,-.16,.66);ctx.beginPath();ctx.ellipse(p[0],p[1],S*.085,S*.038*blink,0,0,TAU);ctx.fill()});
+  const m=proj(0,.37,.67),o=S*(.012+L*.075);ctx.lineWidth=2.2;ctx.beginPath();ctx.ellipse(m[0],m[1],S*(.15-L*.025),o,0,0,TAU);L>.04?ctx.fill():ctx.stroke();ctx.shadowBlur=0}
+function C2(t,cx,cy,R,L){ // circular spectrum around a frosted disc
+  backdrop(cx,cy,R*1.5);
+  ctx.lineCap='round';ctx.strokeStyle='#fff';ctx.lineWidth=3.5;ctx.shadowColor='rgba(255,255,255,.9)';ctx.shadowBlur=8;
+  for(let i=0,n=120;i<n;i++){const a=i/n*TAU+t*.1,
+    h=R*(.1+.05*Math.sin(i*.5+t*1.5)+L*.55*Math.abs(Math.sin(i*.7+t*8)*Math.cos(i*.3-t*3))),r0=R*1.1;
+    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);ctx.lineTo(cx+Math.cos(a)*(r0+h),cy+Math.sin(a)*(r0+h));ctx.stroke()}
+  ctx.shadowBlur=0;ctx.lineCap='butt';
+  const g=ctx.createRadialGradient(cx-R*.3,cy-R*.35,0,cx,cy,R*1.05);
+  g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.6,'rgba(190,225,255,.6)');g.addColorStop(1,'rgba(90,160,255,.45)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,R*(1+L*.04),0,TAU);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.stroke();
+}
+const Q=Array.from({length:900},(_,i)=>[Math.sqrt(i/900),i%3,(Math.random()-.5)*.25,(Math.random()-.5)*.25,.6+Math.random()*1.6]);
+function C3(t,cx,cy,R,L){ // spiral galaxy vortex
+  backdrop(cx,cy,R*1.4);
+  ctx.shadowColor='#fff';ctx.shadowBlur=5;
+  for(const[u,arm,jx,jy,sz]of Q){const rr=u*R*1.8*(1+L*.12*Math.sin(u*9-t*6)),
+    a=u*5+arm*TAU/3+t*.7/(.35+u)+jx;
+    const x=cx+Math.cos(a)*rr+jx*R*.3,y=cy+Math.sin(a)*rr*.45+jy*R*.3;
+    ctx.fillStyle=`rgba(255,255,255,${.9-u*.55})`;ctx.beginPath();ctx.arc(x,y,sz*(1+L*.5),0,TAU);ctx.fill()}
+  ctx.shadowBlur=0;
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R*.5*(1+L*.3));g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,R*.5*(1+L*.3),0,TAU);ctx.fill();
+}
+function C4(t,cx,cy,R,L){ // frosted glass blob
+  backdrop(cx,cy,R*1.4);
+  const path=(s,o)=>{ctx.beginPath();for(let i=0;i<=100;i++){const a=i/100*TAU,
+    r=R*s*(1+.08*Math.sin(a*2+t*1.1+o)+.05*Math.sin(a*3-t*1.4+o)+L*.09*Math.sin(a*6+t*8));
+    const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}};
+  path(1.15,0);const g=ctx.createRadialGradient(cx-R*.4,cy-R*.5,0,cx,cy,R*1.3);
+  g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.5,'rgba(150,200,255,.55)');g.addColorStop(1,'rgba(47,123,255,.75)');
+  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2;ctx.stroke();
+  path(.7,2);ctx.fillStyle='rgba(255,255,255,.25)';ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.ellipse(cx-R*.45,cy-R*.55,R*.22,R*.1,-.7,0,TAU);ctx.fill();
+}
+function C1(t,cx,cy,R,L){ // Ice Glass sphere
+  cy+=Math.sin(t*.9)*R*.04;
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.3);
+  g.addColorStop(0,'rgba(60,130,255,.75)');g.addColorStop(.7,'rgba(90,160,255,.35)');g.addColorStop(1,'rgba(120,180,255,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,R*1.3,0,TAU);ctx.fill();
+  const ry=t*.35,rx=.35,cY=Math.cos(ry),sY=Math.sin(ry),cX=Math.cos(rx),sX=Math.sin(rx);
+  const pts=P.map(([x,y,z,ph])=>{
+    const k=1+L*.12*Math.sin(ph+t*8)+Math.sin(ph+t)*.02;
+    let X=x*cY+z*sY,Z=-x*sY+z*cY,Y=y*cX-Z*sX;Z=y*sX+Z*cX;
+    const s=1/(1.9-Z*.5);return[cx+X*R*k*s*1.9,cy+Y*R*k*s*1.9,Z,s]}).sort((a,b)=>a[2]-b[2]);
+  ctx.shadowColor='rgba(255,255,255,.9)';ctx.shadowBlur=6;
+  for(const[x,y,z,s]of pts){const d=(z+1)/2;ctx.fillStyle=`rgba(${235-d*20|0},${245},255,${.25+d*.75})`;
+    ctx.beginPath();ctx.arc(x,y,(.8+d*1.6+L*.5)*s*1.3,0,TAU);ctx.fill()}
+  ctx.shadowBlur=0;
+  // orbit rings with moving dots
+  [[.45,-.5,.6],[.3,.6,-.9]].forEach(([e,tilt,sp])=>{
+    ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(cx,cy,R*1.55,R*1.55*e,tilt,0,TAU);ctx.stroke();
+    const a=t*sp*2,x=Math.cos(a)*R*1.55,y=Math.sin(a)*R*1.55*e;
+    ctx.fillStyle='#fff';ctx.shadowColor='#fff';ctx.shadowBlur=10;ctx.beginPath();
+    ctx.arc(cx+x*Math.cos(tilt)-y*Math.sin(tilt),cy+x*Math.sin(tilt)+y*Math.cos(tilt),4,0,TAU);ctx.fill();ctx.shadowBlur=0});
+}
+
+let last=performance.now();
+function frame(now){
+  if(window.SBHole?.on){SBHole.setState(talking?'speaking':busy||sttN>0?'thinking':wakeOn&&mr&&mr.state==='recording'?'listening':'idle');last=now;requestAnimationFrame(frame);return}
+  const t=now/1000,dt=Math.min(.05,(now-last)/1000);last=now;
+  const target=talking?Math.min(1,.3+.7*Math.abs(Math.sin(t*9)*Math.sin(t*5.3)+.3*Math.sin(t*17))):0;
+  level+=(target-level)*Math.min(1,dt*10);
+  ctx.clearRect(0,0,W,H);
+  const R=Math.min(W,H)*.2;
+  C(t,W/2,H/2,R,level);
+  wave(t,W/2,H/2+R*2.3,level,'#2f7bff');
+  requestAnimationFrame(frame);
+}
+resize();requestAnimationFrame(frame);
+</script>
+<script src="/study-ui.js"></script>
+</body>
+</html>

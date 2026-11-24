@@ -1,0 +1,35 @@
+const assert = require('assert'), G = require('./gworkspace'), N = require('./notion');
+(async () => {
+  const now = new Date(2026, 10, 23);
+  let a = G.parse('Google Doc বানাও: কালকের পড়ার প্ল্যান', '', now); assert.equal(a.type, 'doc'); assert.equal(a.text, 'কালকের পড়ার প্ল্যান'); assert(a.title.startsWith('SB Doc'));
+  a = G.parse('"Physics Notes" নামে একটা Doc বানাও', '', now); assert.equal(a.title, 'Physics Notes'); assert.equal(a.text, '');
+  a = G.parse('এটাকে Google Doc বানাও', 'আগের উত্তর', now); assert.equal(a.text, 'আগের উত্তর');
+  a = G.parse('Budget নামে Sheet বানাও: খাবার, ১০০\nবই, ২০০', '', now); assert.equal(a.type, 'sheet'); assert.equal(a.title, 'Budget'); assert.deepEqual(a.rows, [['খাবার', '১০০'], ['বই', '২০০']]);
+  a = G.parse('Drive-এ assignment খোঁজো'); assert.deepEqual(a, { type: 'search', query: 'assignment' });
+  assert(G.parse('Drive-এ খোঁজো').ask);
+  for (const q of ['আজকের খবর বলো', 'Google Doc কী?', 'Drive মানে কী', 'একটা গল্প বানাও']) assert.equal(G.parse(q), null, q);
+  assert(G.createUrl({ type: 'sheet', title: 'a b' }, 'x@y.z').startsWith('https://docs.google.com/spreadsheets/create?authuser=x%40y.z&title=a%20b'));
+  assert(!G.tableHtml([['<b>']]).includes('<b>'), 'cell text cannot become markup');
+  const evil = '"];alert(1)//'; assert(G.docScript(evil, 'x@y.z').includes(JSON.stringify(evil.slice(0, 40))), 'text is passed as data');
+  new Function(G.docScript('লেখা', 'x@y.z')); new Function(G.sheetScript([['a', 'b']], 'x@y.z')); new Function(G.SEARCH_JS);
+  assert(/বানিয়ে/.test(G.result({ type: 'doc', title: 'T' }, { id: 'ID', ok: true })));
+  assert(/নিশ্চিত/.test(G.result({ type: 'doc', title: 'T' }, { id: 'ID', ok: false })), 'never claims text it did not read back');
+  assert(/অন্য Google/.test(G.result({ type: 'doc', title: 'T' }, { err: 'account', id: 'x' })));
+
+  a = N.parse('Notion-এ রাখো যে কাল পরীক্ষার ফি দিতে হবে'); assert.equal(a.type, 'save'); assert.equal(a.text, 'কাল পরীক্ষার ফি দিতে হবে');
+  a = N.parse('এটাকে নোট হিসেবে রাখো', 'জরুরি উত্তর'); assert.equal(a.text, 'জরুরি উত্তর');
+  a = N.parse('"Exam" নামে Notion-এ সেভ করো: সিলেবাস'); assert.equal(a.title, 'Exam');
+  assert.equal(N.parse('Notion-এ exam খোঁজো').query, 'exam'); assert(N.parse('Notion-এ রাখো').ask);
+  for (const q of ['Notion কী?', 'Notes খোলো', 'আজকের খবর']) assert.equal(N.parse(q), null, q);
+  assert.equal(N.pageId('https://www.notion.so/My-Notes-0123456789abcdef0123456789abcdef?pvs=4'), '0123456789abcdef0123456789abcdef');
+  assert.equal(N.pageId('https://notion.so/nope'), null); assert(N.validKey('ntn_' + 'a'.repeat(40))); assert(!N.validKey('hello'));
+  const b = N.blocks('x'.repeat(4000) + '\n\nদুই'); assert.equal(b.length, 4); assert(b.every(x => x.paragraph.rich_text[0].text.content.length <= 1900));
+  process.env.NOTION_TOKEN = 'ntn_T'; process.env.NOTION_PAGE_ID = 'P'; assert(N.ready());
+  let sent; const url = await N.save({ title: 'T', text: 'লেখা' }, async (u, o) => { sent = [u, o, JSON.parse(o.body)]; return { ok: true, json: async () => ({ url: 'https://notion.so/new' }) }; });
+  assert.equal(url, 'https://notion.so/new'); assert.equal(sent[0], 'https://api.notion.com/v1/pages'); assert.equal(sent[2].parent.page_id, 'P'); assert.equal(sent[1].headers.authorization, 'Bearer ntn_T');
+  const f = await N.search('x', async () => ({ ok: true, json: async () => ({ results: [{ url: 'u', properties: { Name: { type: 'title', title: [{ plain_text: 'নোট' }] } } }] }) })); assert.deepEqual(f, [{ title: 'নোট', url: 'u' }]);
+  const fresh = await N.search('পরীক্ষা', async u => ({ ok: true, json: async () => u.includes('/children') ? { results: [{ type: 'child_page', id: '0123456789abcdef0123456789abcdef', child_page: { title: 'প্রথম পরীক্ষার নোট' } }, { type: 'child_page', id: 'ffffffffffffffffffffffffffffffff', child_page: { title: 'অন্য' } }, { type: 'paragraph', id: 'x' }] } : { results: [] } }));
+  assert.deepEqual(fresh, [{ title: 'প্রথম পরীক্ষার নোট', url: 'https://www.notion.so/0123456789abcdef0123456789abcdef' }], 'a new note is found before Notion indexes it');
+  await assert.rejects(N.save({ title: 'T', text: 'x' }, async () => ({ ok: false, status: 401 })), e => !e.message.includes('ntn_T'));
+  console.log('workspace tests ok');
+})();

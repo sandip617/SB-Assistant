@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Voice</title>
+<style>
+:root{color-scheme:dark;--bg:#03050b;--panel:rgba(9,13,24,.8);--line:rgba(240,200,110,.22);--line-hi:rgba(255,218,130,.8);--hi:#fff2c9;--gold:#f0c86e;--text:#f8f2e4;--muted:#c2b9a5;--ok:#8be0a4;--err:#ff938c;--ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:radial-gradient(ellipse 80% 70% at 50% 40%,#0c1324 0,var(--bg) 72%);color:var(--text);font:16px/1.55 "Kohinoor Bangla","Bangla Sangam MN","Noto Sans Bengali","Helvetica Neue",sans-serif;overflow:hidden}
+::selection{background:var(--gold);color:#17110a}
+*{scrollbar-width:thin;scrollbar-color:rgba(240,200,110,.42) transparent}
+:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+body::after{content:"";position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.14;background:repeating-linear-gradient(180deg,transparent 0 2px,rgba(255,225,150,.08) 2px 3px)}
+#holeGl{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+#holeBars{display:flex;align-items:center;justify-content:center;gap:3px;height:24px;margin-bottom:6px}
+#holeBars i{display:block;width:3px;height:100%;background:linear-gradient(180deg,var(--hi),#b5842f);transform:scaleY(.08)}
+#holeBoot{display:none}
+.wrap{position:relative;z-index:2;height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,460px);gap:24px;padding:24px}
+.stage{display:flex;flex-direction:column;min-height:0}
+.stage header{animation:up .8s var(--ease) both}
+h1{font-size:30px;font-weight:600;line-height:1.2;color:var(--hi)}
+.lead{color:var(--muted);max-width:52ch;margin-top:6px}
+#rig{flex:1;min-height:0}
+#now{text-align:center;min-height:56px;text-shadow:0 2px 12px rgba(0,0,0,.9)}
+#now b{display:block;font-size:22px;color:var(--hi)}#now small{color:var(--muted)}
+.side{min-height:0;display:flex;flex-direction:column;gap:12px}
+.panel{--c:13px;position:relative;min-height:0;display:flex;flex-direction:column;padding:16px;border:1px solid var(--line);background:
+  linear-gradient(var(--gold),var(--gold)) 0 0/var(--c) 2px,linear-gradient(var(--gold),var(--gold)) 0 0/2px var(--c),
+  linear-gradient(var(--gold),var(--gold)) 100% 0/var(--c) 2px,linear-gradient(var(--gold),var(--gold)) 100% 0/2px var(--c),
+  linear-gradient(var(--gold),var(--gold)) 0 100%/var(--c) 2px,linear-gradient(var(--gold),var(--gold)) 0 100%/2px var(--c),
+  linear-gradient(var(--gold),var(--gold)) 100% 100%/var(--c) 2px,linear-gradient(var(--gold),var(--gold)) 100% 100%/2px var(--c),var(--panel);
+  background-repeat:no-repeat;animation:up .85s var(--ease) both}
+.panel+.panel{animation-delay:.1s}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+h2{font-size:15px;color:var(--gold);margin-bottom:4px}
+.hint{font-size:13px;color:var(--muted);margin-bottom:8px}
+.list{overflow:auto;min-height:0}
+.v{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid rgba(240,200,110,.13);transition:background .25s,transform .35s var(--ease)}
+.v:first-child{border-top:0}
+.v:hover{background:rgba(240,200,110,.06);transform:translateX(4px)}
+.v.cur b::after{content:" · এখন চালু";color:var(--ok);font-weight:400;font-size:13px}
+.play{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;display:grid;place-items:center;transition:transform .3s var(--spring),background .2s,color .2s}
+.play:hover{transform:scale(1.08)}.play[aria-pressed=true]{background:var(--gold);color:#17110a}
+.play svg{width:16px;height:16px;fill:currentColor}
+.meta{flex:1;min-width:0}.meta b{display:block;font-size:16px}.meta small{display:block;color:var(--muted);font-size:13px;line-height:1.4}
+.bar{height:2px;background:rgba(240,200,110,.16);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--gold)}
+.pick{flex:none;font:inherit;font-size:13px;padding:7px 12px;min-height:38px;cursor:pointer;color:#17110a;border:1px solid var(--hi);background:linear-gradient(135deg,#b98a34,#f8df98 55%,#c99a3f);transition:transform .3s var(--spring)}
+.pick:hover{transform:translateY(-2px)}.pick:active{transform:scale(.95)}.pick:disabled{opacity:.55;cursor:default;transform:none}
+#msg{min-height:24px;font-size:14px}#msg.ok{color:var(--ok)}#msg.err{color:var(--err)}
+a{color:var(--gold)}
+@media (max-width:900px){html,body{height:auto}body{overflow:auto}.wrap{height:auto;grid-template-columns:minmax(0,1fr);padding:16px}#rig{flex:none;height:min(80vw,420px)}.list{max-height:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="stage">
+    <header><h1>SB-র নতুন কণ্ঠ</h1><p class="lead">উপরের কণ্ঠগুলো শুধু বর্ণনা থেকে নতুন বানানো, কারো আসল কণ্ঠ নকল না। বাজালে Black Hole কণ্ঠের সাথে সাড়া দেয়, ঠিক যেমন SB-তে দেবে।</p></header>
+    <div id="rig"></div>
+    <div id="now" role="status"><b>একটা কণ্ঠ বাজাও</b><small>ডানদিকের তালিকা থেকে</small></div>
+  </section>
+  <aside class="side">
+    <section class="panel" style="flex:1.6"><h2>নতুন বানানো গভীর কণ্ঠ</h2><p class="hint">প্রতিটা ধরনের ৩টা রূপ। পছন্দেরটায় "এটা রাখো"।</p><div class="list" id="design">লোড হচ্ছে…</div></section>
+    <section class="panel" style="flex:1"><h2>লাইব্রেরির ভারী কণ্ঠ</h2><div class="list" id="stock"></div></section>
+    <p id="msg" role="status"></p>
+    <p><a href="/">SB-তে ফিরে যাও</a></p>
+  </aside>
+</div>
+<script src="/blackhole.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',STOP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+let list=[],audio=null,playing=-1,current='';
+const say=(t,c)=>{$('#msg').textContent=t;$('#msg').className=c||''};
+const row=(v,i)=>`<div class="v${v.id&&v.id===current?' cur':''}"><button class="play" data-i="${i}" aria-pressed="false" aria-label="${esc(v.name)} শোনো">${PLAY}</button><div class="meta"><b>${esc(v.name)}</b><small>${esc(v.note)}</small><div class="bar"><i></i></div></div><button class="pick" data-i="${i}"${v.id&&v.id===current?' disabled':''}>এটা রাখো</button></div>`;
+function render(){$('#design').innerHTML=list.map((v,i)=>v.design?row(v,i):'').join('')||'কিছু নেই';$('#stock').innerHTML=list.map((v,i)=>v.design?'':row(v,i)).join('')}
+function stop(){if(audio){audio.pause();audio=null}const b=document.querySelector(`.play[data-i="${playing}"]`);if(b){b.innerHTML=PLAY;b.setAttribute('aria-pressed','false')}playing=-1;window.SBHole?.setState('idle')}
+document.querySelector('.side').onclick=async e=>{
+  const p=e.target.closest('.play'),k=e.target.closest('.pick');
+  if(p){const i=+p.dataset.i,was=playing===i;stop();if(was)return;const v=list[i],url='/voice-samples/'+v.file;playing=i;p.innerHTML=STOP;p.setAttribute('aria-pressed','true');$('#now').innerHTML=`<b>${esc(v.name)}</b><small>${esc(v.note)}</small>`;
+    audio=new Audio(url);const bar=p.parentElement.querySelector('.bar i');audio.ontimeupdate=()=>{bar.style.width=(audio.currentTime/(audio.duration||1)*100)+'%'};audio.onended=()=>{bar.style.width='100%';stop()};
+    if(window.SBHole?.on){SBHole.follow(audio,url);SBHole.setState('speaking')}audio.play().catch(()=>{say('শব্দ চালাতে পারিনি, আবার চাপো','err');stop()})}
+  if(k){const v=list[+k.dataset.i];k.disabled=true;say('বসাচ্ছি…');try{const r=await fetch(v.design?'/api/setup/design-save':'/api/setup/voice',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:JSON.stringify(v.design?{gid:v.gid,name:v.name,description:v.desc}:{id:v.id,owner:v.owner||undefined})}),j=await r.json();if(!r.ok)throw new Error(j.error);
+    say(`${v.name} চালু হয়েছে। SB-র পাতা একবার reload করো।`,'ok');const s=await (await fetch('/api/setup/voices',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:'{"gender":"male"}'})).json();current=s.current||'';if(v.design)v.id=current;render()}catch(x){k.disabled=false;say('বসাতে পারিনি: '+x.message,'err')}}
+};
+(async()=>{try{list=await (await fetch('/voice-samples/list.json')).json();const s=await (await fetch('/api/setup/voices',{method:'POST',headers:{'content-type':'application/json','x-bilashi':'1'},body:'{"gender":"male"}'})).json();current=s.current||'';render()}catch{$('#design').textContent='নমুনাগুলো লোড হয়নি।'}
+  window.SBHole?.start($('#rig'))})();
+</script>
+</body>
+</html>

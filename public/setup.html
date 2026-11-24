@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SB Voice Setup</title>
+<style>
+body{font:16px/1.6 "SF Pro Text","Bangla Sangam MN",sans-serif;background:#dcecff;color:#0d2a52;margin:0;padding:24px 16px}
+main{max-width:720px;margin:auto}
+h1{font-weight:400;font-size:32px;line-height:1.25;margin:0 0 4px}
+section{background:rgba(255,255,255,.6);border:1px solid #fff;border-radius:18px;padding:18px;margin:16px 0}
+h2{font-size:16px;margin:0 0 8px}
+input{width:100%;font:inherit;padding:10px 12px;border:1px solid #9bbbe8;border-radius:10px;margin:8px 0}
+button,a.b{font:inherit;font-size:14px;background:#1f5fd6;color:#fff;border:0;border-radius:999px;padding:8px 16px;cursor:pointer;text-decoration:none;display:inline-block}
+button.g{background:#fff;color:#1f5fd6;border:1px solid #1f5fd6}
+.v{display:flex;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #c5daf7;flex-wrap:wrap}
+.v div{flex:1;min-width:180px}.v small{display:block;color:#4d6f9c;font-size:12px}
+#msg{min-height:24px;font-size:14px}.ok{color:#0a7a3d}.err{color:#b3261e}
+</style></head><body><main>
+<h1>SB-র কণ্ঠ ঠিক করো</h1>
+<p>দুটো ধাপ। শেষে SB ElevenLabs-এর কণ্ঠে কথা বলবে।</p>
+
+<section>
+  <h2>ধাপ ১ · ElevenLabs key</h2>
+  <p>ElevenLabs-এ অ্যাকাউন্ট খুলে (ফ্রি চলে) API key বানাও, তারপর এখানে বসাও।</p>
+  <a class="b" href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">key বানানোর পাতা খোলো</a>
+  <input id="key" type="password" placeholder="ElevenLabs API key এখানে পেস্ট করো" autocomplete="off">
+  <button id="saveKey">সংরক্ষণ করো</button>
+</section>
+
+<section id="s2" hidden>
+  <h2>ধাপ ২ · কণ্ঠ বাছো</h2>
+  <p>নরম, মিষ্টি মেয়েলি কণ্ঠ বেছে "এটা নাও" চাপো। নমুনা শুনে দেখো। নিজের অ্যাকাউন্টের কণ্ঠে "বাংলায় শোনো" দিলে সত্যিকারের বাংলা বাক্য শুনতে পাবে।</p>
+  <div id="list">লোড হচ্ছে…</div>
+</section>
+<div id="msg"></div>
+
+<script>
+const $=s=>document.querySelector(s),H={'content-type':'application/json','x-bilashi':'1'};
+const say=(t,c)=>{$('#msg').textContent=t;$('#msg').className=c||''};
+const api=async(p,b)=>{const r=await fetch(p,{method:'POST',headers:H,body:JSON.stringify(b||{})});const j=await r.json();if(!r.ok)throw new Error(j.error);return j};
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let cur='';
+$('#saveKey').onclick=async()=>{try{say('যাচাই হচ্ছে…');await api('/api/setup/key',{key:$('#key').value.trim()});$('#key').value='';say('key ঠিক আছে, সংরক্ষিত।','ok');load()}catch(e){say(e.message,'err')}};
+function row(v,own){return `<div class="v"><div><b>${esc(v.name)}${v.id===cur?' ✓ (বর্তমান)':''}</b><small>${esc(v.info)}</small></div>
+  ${v.preview?`<button class="g" data-a="play" data-u="${esc(v.preview)}">▶ নমুনা</button>`:''}
+  ${own?`<button class="g" data-a="bn" data-id="${esc(v.id)}">বাংলায় শোনো</button>`:''}
+  <button data-a="use" data-id="${esc(v.id)}" data-o="${own?'':esc(v.owner)}">এটা নাও</button></div>`}
+$('#list').onclick=e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;if(d.a==='play')new Audio(d.u).play();if(d.a==='bn')bn(d.id);if(d.a==='use')use(d.id,d.o)}; // voice names/links come from other people: never put them in inline handlers
+async function load(){try{const r=await fetch('/api/setup/voices',{method:'POST',headers:H,body:'{}'}),j=await r.json();if(!r.ok)throw new Error(j.error);
+  cur=j.current;$('#s2').hidden=false;
+  $('#list').innerHTML='<b>তোমার অ্যাকাউন্টের কণ্ঠ</b>'+j.mine.map(v=>row(v,1)).join('')+
+    (j.library.length?'<br><b>লাইব্রেরির বাংলা মেয়েলি কণ্ঠ</b>'+j.library.map(v=>row(v,0)).join(''):'')}catch(e){/* no key yet */}}
+window.bn=async id=>{try{say('বানাচ্ছি…');const r=await fetch('/api/tts',{method:'POST',headers:{'x-bilashi':'1'},body:JSON.stringify({voice_id:id,text:'সুপ্রভাত! আজ অনেক কাজ বাকি। আগে নাস্তা করে নাও, তারপর আমি তোমাকে পড়া বুঝিয়ে দেব, কেমন?'})});
+  if(!r.ok)throw new Error((await r.json()).error);say('');new Audio(URL.createObjectURL(await r.blob())).play()}catch(e){say(e.message,'err')}};
+window.use=async(id,owner)=>{try{say('সেট হচ্ছে…');await api('/api/setup/voice',{id,owner});say('হয়ে গেছে! এখন SB-র পাতায় গিয়ে কথা বলাও।','ok');load()}catch(e){say(e.message,'err')}};
+load();
+</script></main></body></html>
